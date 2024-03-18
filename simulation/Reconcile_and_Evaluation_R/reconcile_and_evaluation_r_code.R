@@ -1,17 +1,17 @@
-#Evaluate reconciled forecasts
+#Create and Evaluate reconciled forecasts
 
+# Load library
 library(tidyverse)
 library(mvtnorm)
 library(Matrix)
+
 #Clear workspace
 rm(list=ls())
 
 
 evalN<-10 #Number of evaluation periods
 Q<-1000 #Number of draws to estimate energy score
-#inW<-250#inner window for training reco weights
-#L<-4 #Lags to leave at beginning
-N<-500 #Training sample size for 
+N<-500 #Training sample size
 M<-7 #Number of series
 
 #Set up S matrix
@@ -28,34 +28,17 @@ S<-matrix(c(1,1,1,1,
 SG_bu<-S%*%cbind(matrix(0,4,3),diag(rep(1,4)))
 SG_ols<-S%*%solve(t(S)%*%S,t(S))
 
-#Energy score
+#Energy score with alpha = 2
 energy_score<-function(y,x,xs){
   dif1<-x-xs
   dif2<-y-x
-  
-  term1<-apply(dif1,2,function(v){sqrt(sum(v^2))})%>%sum
-  term2<-apply(dif2,2,function(v){sqrt(sum(v^2))})%>%sum
+  term1<-apply(dif1,2,function(v){sum(v^2)})%>%sum
+  term2<-apply(dif2,2,function(v){sum(v^2)})%>%sum
   return(((-0.5*term1)+term2)/ncol(x))
-  
 }
 
-#Variogram score
-variogram_score<-function(y,x,xs){
-  term1<-0
-  for (i in 1:(length(y)-1)){
-    for (j in (i+1):length(y)){
-      term2<-0
-      for (q in 1:ncol(x)){
-        term2<-term2+abs(x[i,q]-xs[j,q])
-      }
-      term2<-term2/ncol(x)
-      term1<-term1+(abs(y[i]-y[j])-term2)^2
-      
-    }
-  }
-  return(term1)
-}
 
+# W with shrinkage
 shrink.estim <- function(res)
 {
   n<-nrow(res)
@@ -73,19 +56,31 @@ shrink.estim <- function(res)
   W <- lambda * tar + (1 - lambda) * covm
   return(W)
 }
-  
+
+# Set the type of the input dataset
+innovationsj<-'gaussian'
+depj<-'independent'
+
 #Read in data
 data<-read.csv('D:\\HierarchicalCode\\simulation\\Data\\Simulated_Data_With_Added_Noise.csv')
 
-# Base
+# Read the Base forecast results
 #install.packages("rjson")
 library(rjson)
 fc<-fromJSON(file = "D:\\HierarchicalCode\\simulation\\Base_Forecasts\\base_forecasts_results.json")
-fc1<-fc
-fc<-fc1
 for (i in 1:10){
-  names(fc[[i]])<-c('fc_mean','fc_sd','resid','fitted')
+  names(fc[[i]])<-c('fc_mean','fc_var','resid','fitted')
 }
+
+# Calculate sd
+for (i in 1:10){
+  sd_list<-NULL
+  for (j in 1:7){
+    sd_list<-c(sd_list,sqrt(fc[[i]]$fc_var[j]))
+  }
+  fc[[i]]$fc_sd<-sd_list
+}
+
 
 for (i in 1:10){
   k<-NULL
@@ -97,7 +92,7 @@ for (i in 1:10){
   fc[[i]]$fc_Sigma_shr<-shrink.estim(t(k))
 }
 
-
+# Without immutable series
 Base<-rep(NA,evalN)
 BottomUp<-rep(NA,evalN)
 OLS<-rep(NA,evalN)
@@ -108,15 +103,11 @@ MinTSam<-rep(NA,evalN)
 BTTH<-rep(NA,evalN)
 Im<-rep(NA,evalN)
 
-Basev<-rep(NA,evalN)
-BottomUpv<-rep(NA,evalN)
+# With immutable series
 OLSv<-rep(NA,evalN)
 WLSv<-rep(NA,evalN)
-JPPv<-rep(NA,evalN)
 MinTShrv<-rep(NA,evalN)
 MinTSamv<-rep(NA,evalN)
-BTTHv<-rep(NA,evalN)
-Imv<-rep(NA,evalN)
 
 # produce summing matrix of new basis time series
 transform.sMat <- function(sMat, basis_set){
@@ -204,26 +195,18 @@ forecast.reconcile <- function(base_forecasts,
   reconciled_y[,order(new_index)]
 }
 
-########
-innovationsj<-'gaussian'
-depj<-'independent'
+
+# Start creating and evaluating
 
 for (i in 1:evalN){
-  
-  
   #Get realisation
-  
   y1<-data[N+i,]
   y2<-as.matrix(y1)
   y3<-matrix(rep(y2,Q),nrow=7,byrow=F)
-  
   y<-y3
+  
   #Base forecasts
-  
   fc_i<-fc[[i]]
-  
-  
-  
   
   if ((innovationsj=='gaussian')&&(depj=='independent')){
     #Gaussian independent
@@ -241,14 +224,23 @@ for (i in 1:evalN){
   
   #Base forecast
   Base[i]<-energy_score(y,x,xs)
-  #Basev[i]<-variogram_score(y,x,xs)
+
   #Bottom up
   BottomUp[i]<-energy_score(y,SG_bu%*%x,SG_bu%*%xs)
-  #BottomUpv[i]<-variogram_score(y,SG_bu%*%x,SG_bu%*%xs)
   
   #OLS
   OLS[i]<-energy_score(y,SG_ols%*%x,SG_ols%*%xs)
-  #OLSv[i]<-variogram_score(y,SG_ols%*%x,SG_ols%*%xs)
+  newx = t(forecast.reconcile(t(x), 
+                            S, 
+                            diag(rep(1,M)),
+                            immu_set = c(1)))
+  newxs = t(forecast.reconcile(t(xs), 
+                            S, 
+                            diag(rep(1,M)),
+                            immu_set = c(1)))
+  OLSv[i]<-energy_score(y,newx,newxs)
+}
+  '''
   
   
   #WLS (structural)
@@ -275,8 +267,6 @@ for (i in 1:evalN){
   
   
   # imut
-  sMat = rbind(matrix(c(1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1), 3, 4),
-               diag(rep(1, 4)))
   shrinkagex = forecast.reconcile(x, 
                                 sMat, 
                                 fc_i$fc_Sigma_sam,
@@ -286,8 +276,9 @@ for (i in 1:evalN){
                                   fc_i$fc_Sigma_sam,
                                   immu_set = c(1))
   Imu[i]<-energy_score(y,shrinkagex,shrinkagexs)
-}
+  '''
 
+res_independent<-data.frame(Base=Base,BottomUp=BottomUp,OLS=OLS,OLSv=OLSv)
 res_independent<-data.frame(Base=Base,BottomUp=BottomUp,JPP=JPP,OLS=OLS,WLS=WLS,MinTSam=MinTSam,MinTShr=MinTShr,Imu=Imu)
 write.csv(res_independent,'D:\\HierarchicalCode\\simulation\\Reconcile_and_Evaluation_R\\independent_v2.csv')
 #res_joint<-data.frame(Base=Base,BottomUp=BottomUp,JPP=JPP,OLS=OLS,WLS=WLS,MinTSam=MinTSam,MinTShr=MinTShr,Imu=Imu)
