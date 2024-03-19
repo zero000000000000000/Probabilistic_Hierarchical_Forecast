@@ -1,5 +1,5 @@
 #Create and Evaluate reconciled forecasts
-
+setwd('D:\\HierarchicalCode\\simulation')
 #install.packages("rjson")
 library(rjson)
 # Load library
@@ -9,6 +9,14 @@ library(Matrix)
 #Clear workspace
 rm(list=ls())
 
+# CRPS with alpha = 1
+crps<-function(y,x,xs){
+  dif1<-x-xs
+  dif2<-y-x
+  term1<-apply(dif1,1,function(v){sum(abs(v))})
+  term2<-apply(dif2,1,function(v){sum(abs(v))})
+  return(((-0.5*term1)+term2)/ncol(x))
+}
 
 #Energy score with alpha = 2
 energy_score<-function(y,x,xs){
@@ -117,7 +125,7 @@ forecast.reconcile<-function(base_forecasts,
   return(reconciled_y[,order(new_index)])
 }
 
-# Set constant
+############# Set constant
 evalN<-10 #Number of evaluation periods
 Q<-1000 #Number of draws to estimate energy score
 N<-500 #Training sample size
@@ -138,14 +146,17 @@ SG_bu<-S%*%cbind(matrix(0,4,3),diag(rep(1,4)))
 SG_ols<-S%*%solve(t(S)%*%S,t(S))
 
 # Set the type of the input dataset
-innovationsj<-'gaussian'
-depj<-'independent'
+z<-2
+dataset_type<-read.csv('D:\\HierarchicalCode\\simulation\\Config\\Config_dataset_type.csv')
+generate<-dataset_type$generate[z]
+rootbasef<-dataset_type$rootbasef[z]
+depj<-dataset_type$basefdep[z]
 
 #Read in data
-data<-read.csv('D:\\HierarchicalCode\\simulation\\Data\\Simulated_Data_With_Added_Noise.csv')
+data<-read.csv(paste('D:\\HierarchicalCode\\simulation\\Data\\Simulated_Data_',generate,'.csv',sep=''))
 
 # Read the Base forecast results
-fc<-fromJSON(file = "D:\\HierarchicalCode\\simulation\\Base_Forecasts\\base_forecasts_results.json")
+fc<-fromJSON(file = paste("D:\\HierarchicalCode\\simulation\\Base_Forecasts\\",generate,"_",rootbasef,".json",sep=''))
 for (i in 1:10){
   names(fc[[i]])<-c('fc_mean','fc_var','resid','fitted')
 }
@@ -171,7 +182,7 @@ for (i in 1:10){
   fc[[i]]$fc_Sigma_shr<-shrink.estim(t(k))
 }
 
-# Without immutable series
+# ES Without immutable series 
 Base<-rep(NA,evalN)
 BottomUp<-rep(NA,evalN)
 OLS<-rep(NA,evalN)
@@ -179,15 +190,27 @@ WLS<-rep(NA,evalN)
 JPP<-rep(NA,evalN)
 MinTShr<-rep(NA,evalN)
 MinTSam<-rep(NA,evalN)
-BTTH<-rep(NA,evalN)
-Im<-rep(NA,evalN)
 
-# With immutable series
+# ES With immutable series
 OLSv<-rep(NA,evalN)
 WLSv<-rep(NA,evalN)
 MinTShrv<-rep(NA,evalN)
 MinTSamv<-rep(NA,evalN)
 
+# CRPS without immutable series
+Basec<-rep(NA,M*evalN)
+BottomUpc<-rep(NA,M*evalN)
+OLSc<-rep(NA,M*evalN)
+WLSc<-rep(NA,M*evalN)
+JPPc<-rep(NA,M*evalN)
+MinTShrc<-rep(NA,M*evalN)
+MinTSamc<-rep(NA,M*evalN)
+
+# CRPS With immutable series
+OLScv<-rep(NA,M*evalN)
+WLScv<-rep(NA,M*evalN)
+MinTShrcv<-rep(NA,M*evalN)
+MinTSamcv<-rep(NA,M*evalN)
 
 # Start creating and evaluating
 # Set seed
@@ -199,35 +222,43 @@ for (i in 1:evalN){
   y2<-as.matrix(y1)
   y3<-matrix(rep(y2,Q),nrow=7,byrow=F)
   y<-y3
-  
+
   #Base forecasts
   fc_i<-fc[[i]]
   
-  if ((innovationsj=='gaussian')&&(depj=='independent')){
+  if (depj=='Independent'){
     #Gaussian independent
     fc_mean<-fc_i$fc_mean
     fc_sd<-fc_i$fc_sd
     x<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
     xs<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
-  }else if((innovationsj=='gaussian')&&(depj=='joint')){
+  }else if(depj=='Joint'){
     #Gaussian dependent
     fc_mean<-fc_i$fc_mean
     fc_sigma<-fc_i$fc_Sigma_sam
     x<-t(rmvnorm(Q,fc_mean,fc_sigma))
     xs<-t(rmvnorm(Q,fc_mean,fc_sigma))
   }
-  print(x[1,1],xs[1,1])
+  
   # Set the immutable point and Get the basis series
   basis_lis<-forecast.basis_series(S,immu_set=c(1))
   
   #Base forecast
   Base[i]<-energy_score(y,x,xs)
-
+  Basec[((i-1)*M+1):(i*M)]<-crps(y,x,xs)
+  
   #Bottom up
-  BottomUp[i]<-energy_score(y,SG_bu%*%x,SG_bu%*%xs)
+  newx<-SG_bu%*%x
+  newxs<-SG_bu%*%xs
+  BottomUp[i]<-energy_score(y,newx,newxs)
+  BottomUpc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
   
   #OLS
-  OLS[i]<-energy_score(y,SG_ols%*%x,SG_ols%*%xs)
+  newx<-SG_ols%*%x
+  newxs<-SG_ols%*%xs
+  OLS[i]<-energy_score(y,newx,newxs)
+  OLSc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  
   newx <- t(forecast.reconcile(t(x), 
                             S, 
                             diag(rep(1,M)),
@@ -239,11 +270,16 @@ for (i in 1:evalN){
                             basis_lis$mutable_basis,
                             basis_lis$immutable_basis))
   OLSv[i]<-energy_score(y,newx,newxs)
+  OLScv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
   
   #WLS (structural)
   SW_wls<-solve(diag(rowSums(S)),S)
   SG_wls<-S%*%solve(t(SW_wls)%*%S,t(SW_wls))
-  WLS[i]<-energy_score(y,SG_wls%*%x,SG_wls%*%xs)
+  newx<-SG_wls%*%x
+  newxs<-SG_wls%*%xs
+  WLS[i]<-energy_score(y,newx,newxs)
+  WLSc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  
   newx <- t(forecast.reconcile(t(x), 
                               S, 
                               diag(rowSums(S)),
@@ -255,14 +291,22 @@ for (i in 1:evalN){
                                basis_lis$mutable_basis,
                                basis_lis$immutable_basis))
   WLSv[i]<-energy_score(y,newx,newxs)
+  WLScv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
   
   #JPP
-  JPP[i]<-energy_score(y,SG_wls%*%t(apply(x,1,sort)),SG_wls%*%t(apply(xs,1,sort)))
+  newx<-SG_wls%*%t(apply(x,1,sort))
+  newxs<-SG_wls%*%t(apply(xs,1,sort))
+  JPP[i]<-energy_score(y,newx,newxs)
+  JPPc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
   
   #MinT (sam)
   SW_MinTSam<-solve(fc_i$fc_Sigma_sam,S)
   SG_MinTSam<-S%*%solve(t(SW_MinTSam)%*%S,t(SW_MinTSam))
-  MinTSam[i]<-energy_score(y,SG_MinTSam%*%x,SG_MinTSam%*%xs)
+  newx<-SG_MinTSam%*%x
+  newxs<-SG_MinTSam%*%xs
+  MinTSam[i]<-energy_score(y,newx,newxs)
+  MinTSamc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  
   newx <- t(forecast.reconcile(t(x), 
                                S, 
                                fc_i$fc_Sigma_sam,
@@ -274,11 +318,16 @@ for (i in 1:evalN){
                                 basis_lis$mutable_basis,
                                 basis_lis$immutable_basis))
   MinTSamv[i]<-energy_score(y,newx,newxs)
+  MinTSamcv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
   
   #MinT (shr)
   SW_MinTShr<-solve(fc_i$fc_Sigma_shr,S)
   SG_MinTShr<-S%*%solve(t(SW_MinTShr)%*%S,t(SW_MinTShr))
-  MinTShr[i]<-energy_score(y,SG_MinTShr%*%x,SG_MinTShr%*%xs)
+  newx<-SG_MinTShr%*%x
+  newxs<-SG_MinTShr%*%xs
+  MinTShr[i]<-energy_score(y,newx,newxs)
+  MinTShrc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  
   newx <- t(forecast.reconcile(t(x), 
                                S, 
                                fc_i$fc_Sigma_shr,
@@ -290,9 +339,32 @@ for (i in 1:evalN){
                                 basis_lis$mutable_basis,
                                 basis_lis$immutable_basis))
   MinTShrv[i]<-energy_score(y,newx,newxs)
+  MinTShrcv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
 }
 
-res_independent<-data.frame(Base=Base,BottomUp=BottomUp,JPP=JPP,OLS=OLS,OLSv=OLSv,
+res_energyscore<-data.frame(Base=Base,BottomUp=BottomUp,JPP=JPP,OLS=OLS,OLSv=OLSv,
                             WLS=WLS,WLSv=WLSv,MinTSam=MinTSam,MinTSamv=MinTSamv,
-                            MinTShr=MinTShr,MinTShrv=MinTShrv)
-write.csv(res_independent,'D:\\HierarchicalCode\\simulation\\Reconcile_and_Evaluation_R\\independent_v2.csv')
+                            MinTShr=MinTShr,MinTShrv=MinTShrv,
+                            t=1:evalN)
+res_crps<-data.frame(Basec=Basec,BottomUpc=BottomUpc,JPPc=JPPc,OLSc=OLSc,OLScv=OLScv,
+                     WLSc=WLSc,WLScv=WLScv,MinTSamc=MinTSamc,MinTSamcv=MinTSamcv,
+                     MinTShrc=MinTShrc,MinTShrcv=MinTShrcv,
+                     series=rep(1:M,evalN),
+                     t=rep(1:evalN,times=rep(M,evalN)))
+# Create directory and save
+directory_path<-'./Evaluation_Result/Energy_Score'
+if (!dir.exists(directory_path)){
+  dir.create(directory_path, recursive = TRUE)
+  print(paste("Path created:", directory_path))
+}
+
+directory_path<-'./Evaluation_Result/CRPS'
+if (!dir.exists(directory_path)){
+  dir.create(directory_path, recursive = TRUE)
+  print(paste("Path created:", directory_path))
+}
+
+write.csv(res_energyscore,paste('.\\Evaluation_Result\\Energy_Score\\',generate,'_',
+                                rootbasef,'_',depj,'.csv',sep=''))
+write.csv(res_crps,paste('.\\Evaluation_Result\\CRPS\\',generate,'_',
+                                rootbasef,'_',depj,'.csv',sep=''))

@@ -45,7 +45,7 @@ def Forecast_Base(df,approach):
     return [series_mu, series_var, series_resid,series_fitted]
 
 # Load the original data
-data = pd.read_csv('./Data/Simulated_Data_With_Added_Noise.csv').iloc[:510,:]
+data = pd.read_csv('./Data/Simulated_Data_WithNoise.csv').iloc[:510,:]
 
 # Set the params
 N = 500
@@ -61,5 +61,5 @@ for i in tqdm(range(W)):
     forecast_results.append(Forecast_Base(data_windows[i],'arima'))
 
 # Load the result in a json file
-with open('base_forecasts_results.json', 'w') as json_file:
+with open('WithNoise_ARIMA.json', 'w') as json_file:
     json.dump(forecast_results, json_file)

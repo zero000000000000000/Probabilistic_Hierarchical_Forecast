@@ -70,5 +70,5 @@ if Validate_variance(bottom_err_cov,sigmas1,sigmas2):
     df_2.to_csv('./Data/Added_Noise_Data.csv',index=False)
 
 # Save the two type of data
-simulate_data_1.to_csv('./Data/Simulated_Data_Without_Added_Noise.csv',index=False)
-simulate_data_2.to_csv('./Data/Simulated_Data_With_Added_Noise.csv',index=False)
+simulate_data_1.to_csv('./Data/Simulated_Data_WithoutNoise.csv',index=False)
+simulate_data_2.to_csv('./Data/Simulated_Data_WithNoise.csv',index=False)
