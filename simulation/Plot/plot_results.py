@@ -31,6 +31,7 @@ def plot_energy_score(data,path):
     ax.set_xticklabels([i for i in range(1,len(data)+1)])
     plt.savefig(path+'.png')
     #plt.show()
+    plt.close()
 
 def plot_avg_energy_score(data,path):
     '''
@@ -51,6 +52,7 @@ def plot_avg_energy_score(data,path):
                 ha='center', va='bottom', fontsize=12)
     plt.savefig(path+'_avg.png')
     #plt.show()
+    plt.close()
 
 def plot_avg_crps(data,path):
     '''
@@ -72,6 +74,7 @@ def plot_avg_crps(data,path):
     ax.set_ylabel('CRPS')
     plt.savefig(path+'_avg.png')
     #plt.show()
+    plt.close()
 
 if __name__ == '__main__':
     # Get args
