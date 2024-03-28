@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import argparse
-import os
 
 colors = ['blue','green','red','cyan','magenta','yellow','black','orange','purple','brown','pink']
 
