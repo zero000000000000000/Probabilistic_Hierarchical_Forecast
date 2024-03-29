@@ -30,13 +30,29 @@ def energy_score(y,x,xs):
     term2 = np.sum(np.sum(np.square(dif2),axis=0),axis=1)
     return ((-0.5*term1)+term2)/(x.shape[1])
 
+def variogram_score(y,x):
+    '''
+    Calculate the variogram score
+    '''
+    n = y.shape[0]  # Variables num, equals to 7 when simulating
+    Q = y.shape[1]  # Sample size
+    term1 = 0
+    for i in range(n-1):
+        for j in range(i+1,n):
+            term2 = 0
+            for q in range(Q):
+                term2 = term2+abs(x[i,q]-x[j,q])
+            term2 = term2/Q
+            term1 = term1+(float(abs(y[i,0]-y[j,0]))-float(term2))**2
+    return term1
+
+
 if __name__=='__main__':
     # Get params
     args = parser.parse_args()
     generate = args.generate
     rootbasef = args.rootbasef
     basefdep = args.basefdep
-    immutable = args.immutable
 
     # Get data
     N = 500
@@ -62,30 +78,38 @@ if __name__=='__main__':
     # save the 5 times results
     CRPS = []
     ES = []
+    VS = []
     for i in range(5):
         # Get x and xs
         x = random.multivariate_normal(mean, cov, Q).T
         xs = random.multivariate_normal(mean, cov, Q).T
 
-        # Permute
-        if immutable == 'immutable':
-            x1 = np.take(x, new_index, axis=0)
-            x2 = np.take(xs, new_index, axis=0)
-            y1 = np.take(y, new_index, axis=0)
-        else:
-            x1 = x
-            x2 = xs
-            y1 = y
+        x1 = np.take(x, new_index, axis=0)
+        x2 = np.take(xs, new_index, axis=0)
+        y1 = np.take(y, new_index, axis=0)
+
 
         res1 = crps(y1,S@G@x1,S@G@x2)
         res_crps = [res1[m,0] for m in range(res1.shape[0])]
-        CRPS.append(res_crps)
+        #print(res_crps)
+        # Recover
+        new_res_crps = []
+        j=0
+        for i in new_index:
+            new_res_crps.append(res_crps[new_index.index(j)])
+            j+=1
+        #print(new_res_crps)
+        CRPS.append(new_res_crps)
 
         res2 = energy_score(y1,S@G@x1,S@G@x2)
         res_energy_score = [res2[m,0] for m in range(res2.shape[0])]
         ES.append(res_energy_score)
 
+        res3 = variogram_score(y1,S@G@x1)
+        #res_variogram_score = [res3[m,0] for m in range(res3.shape[0])]
+        VS.append(res3)
 
-    dic={'CRPS':CRPS,'ES':ES}
+
+    dic={'CRPS':CRPS,'ES':ES,'VS':VS}
     with open(f'./Evaluation_Result/Results_Opt/{generate}_{rootbasef}_{basefdep}.json', 'w') as file:
         file.write(json.dumps(dic))

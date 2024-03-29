@@ -27,6 +27,22 @@ energy_score<-function(y,x,xs){
   return(((-0.5*term1)+term2)/ncol(x))
 }
 
+#Variogram score with p=1
+variogram_score<-function(y,x){
+  term1<-0
+  for (i in 1:(nrow(y)-1)){
+    for (j in (i+1):nrow(y)){
+      term2<-0
+      for (q in 1:ncol(x)){
+        term2<-term2+abs(x[i,q]-x[j,q])
+      }
+      term2<-term2/ncol(x)
+      term1<-term1+(abs(y[i,1]-y[j,1])-term2)^2
+    }
+  }
+  return(term1)
+}
+
 
 # W with shrinkage
 shrink.estim <- function(res)
@@ -191,6 +207,7 @@ for(z in 1:8){
   i<-1
   res_energyscore<-NULL
   res_crps<-NULL
+  res_variogramscore<-NULL
   
   for (j in 1:5){
     # Initialize
@@ -224,6 +241,22 @@ for(z in 1:8){
     MinTShrcv<-rep(NA,M*evalN)
     MinTSamcv<-rep(NA,M*evalN)
     
+    
+    # VS Without immutable series
+    Base_vs<-rep(NA,evalN)
+    BottomUp_vs<-rep(NA,evalN)
+    OLS_vs<-rep(NA,evalN)
+    WLS_vs<-rep(NA,evalN)
+    JPP_vs<-rep(NA,evalN)
+    MinTShr_vs<-rep(NA,evalN)
+    MinTSam_vs<-rep(NA,evalN)
+    
+    # VS With immutable series
+    OLS_vsv<-rep(NA,evalN)
+    WLS_vsv<-rep(NA,evalN)
+    MinTShr_vsv<-rep(NA,evalN)
+    MinTSam_vsv<-rep(NA,evalN)
+    
     # Get realisation
     y1<-data[N+i,]
     y2<-as.matrix(y1)
@@ -253,18 +286,22 @@ for(z in 1:8){
     #Base forecast
     Base[i]<-energy_score(y,x,xs)
     Basec[((i-1)*M+1):(i*M)]<-crps(y,x,xs)
+    Base_vs[i]<-variogram_score(y,x)
+    
     
     #Bottom up
     newx<-SG_bu%*%x
     newxs<-SG_bu%*%xs
     BottomUp[i]<-energy_score(y,newx,newxs)
     BottomUpc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    BottomUp_vs[i]<-variogram_score(y,newx)
     
     #OLS
     newx<-SG_ols%*%x
     newxs<-SG_ols%*%xs
     OLS[i]<-energy_score(y,newx,newxs)
     OLSc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    OLS_vs[i]<-variogram_score(y,newx)
     
     newx <- t(forecast.reconcile(t(x), 
                                  S, 
@@ -278,6 +315,7 @@ for(z in 1:8){
                                   basis_lis$immutable_basis))
     OLSv[i]<-energy_score(y,newx,newxs)
     OLScv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    OLS_vsv[i]<-variogram_score(y,newx)
     
     #WLS (structural)
     SW_wls<-solve(diag(rowSums(S)),S)
@@ -286,6 +324,7 @@ for(z in 1:8){
     newxs<-SG_wls%*%xs
     WLS[i]<-energy_score(y,newx,newxs)
     WLSc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    WLS_vs[i]<-variogram_score(y,newx)
     
     newx <- t(forecast.reconcile(t(x), 
                                  S, 
@@ -299,12 +338,14 @@ for(z in 1:8){
                                   basis_lis$immutable_basis))
     WLSv[i]<-energy_score(y,newx,newxs)
     WLScv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    WLS_vsv[i]<-variogram_score(y,newx)
     
     #JPP
     newx<-SG_wls%*%t(apply(x,1,sort))
     newxs<-SG_wls%*%t(apply(xs,1,sort))
     JPP[i]<-energy_score(y,newx,newxs)
     JPPc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    JPP_vs[i]<-variogram_score(y,newx)
     
     #MinT (sam)
     SW_MinTSam<-solve(fc_i$fc_Sigma_sam,S)
@@ -313,6 +354,7 @@ for(z in 1:8){
     newxs<-SG_MinTSam%*%xs
     MinTSam[i]<-energy_score(y,newx,newxs)
     MinTSamc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    MinTSam_vs[i]<-variogram_score(y,newx)
     
     newx <- t(forecast.reconcile(t(x), 
                                  S, 
@@ -326,6 +368,7 @@ for(z in 1:8){
                                   basis_lis$immutable_basis))
     MinTSamv[i]<-energy_score(y,newx,newxs)
     MinTSamcv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    MinTSam_vsv[i]<-variogram_score(y,newx)
     
     #MinT (shr)
     SW_MinTShr<-solve(fc_i$fc_Sigma_shr,S)
@@ -334,6 +377,7 @@ for(z in 1:8){
     newxs<-SG_MinTShr%*%xs
     MinTShr[i]<-energy_score(y,newx,newxs)
     MinTShrc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    MinTShr_vs[i]<-variogram_score(y,newx)
     
     newx <- t(forecast.reconcile(t(x), 
                                  S, 
@@ -347,18 +391,25 @@ for(z in 1:8){
                                   basis_lis$immutable_basis))
     MinTShrv[i]<-energy_score(y,newx,newxs)
     MinTShrcv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+    MinTShr_vsv[i]<-variogram_score(y,newx)
+    
     res_energyscore<-rbind(res_energyscore,data.frame(t=j,Base=Base,BottomUp=BottomUp,JPP=JPP,OLS=OLS,OLSv=OLSv,
                                                       WLS=WLS,WLSv=WLSv,MinTSam=MinTSam,MinTSamv=MinTSamv,
                                                       MinTShr=MinTShr,MinTShrv=MinTShrv))
-    res_crps<-rbind(res_crps,data.frame(series=1:M,
-                                        t=rep(j,M),Basec=Basec,BottomUpc=BottomUpc,JPPc=JPPc,OLSc=OLSc,OLScv=OLScv,
+    res_crps<-rbind(res_crps,data.frame(t=rep(j,M),series=1:M,Basec=Basec,BottomUpc=BottomUpc,JPPc=JPPc,OLSc=OLSc,OLScv=OLScv,
                                         WLSc=WLSc,WLScv=WLScv,MinTSamc=MinTSamc,MinTSamcv=MinTSamcv,
                                         MinTShrc=MinTShrc,MinTShrcv=MinTShrcv))
+    res_variogramscore<-rbind(res_variogramscore,data.frame(t=j,Base_vs=Base_vs,BottomUp_vs=BottomUp_vs,JPP_vs=JPP_vs,OLS_vs=OLS_vs,OLS_vsv=OLS_vsv,
+                                                         WLS_vs=WLS_vs,WLS_vsv=WLS_vsv,MinTSam_vs=MinTSam_vs,MinTSam_vsv=MinTSam_vsv,
+                                                         MinTShr_vs=MinTShr_vs,MinTShr_vsv=MinTShr_vsv))
+    
   }
   write.csv(res_energyscore,paste('.\\Evaluation_Result\\Energy_Score\\',generate,'_',
-                                  rootbasef,'_',depj,'.csv',sep=''))
+                                  rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
   write.csv(res_crps,paste('.\\Evaluation_Result\\CRPS\\',generate,'_',
-                           rootbasef,'_',depj,'.csv',sep=''))
+                           rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
+  write.csv(res_variogramscore,paste('.\\Evaluation_Result\\Variogram_Score\\',generate,'_',
+                           rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
 }
 
 

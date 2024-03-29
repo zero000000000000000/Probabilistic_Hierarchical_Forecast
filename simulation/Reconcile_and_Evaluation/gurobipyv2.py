@@ -123,7 +123,7 @@ if __name__=='__main__':
     res = res.reshape((4,7))
     res[3,6] = 1
     
-    np.save(f'./Reconcile_and_Evaluation/gurobipy_results/{generate}_{rootbasef}_{basefdep}_Gopt.npy',res)
+    np.save(f'./Reconcile_and_Evaluation/Gurobipy_Results/{generate}_{rootbasef}_{basefdep}_Gopt.npy',res)
 
     et = time.time()
     print(et-st)
