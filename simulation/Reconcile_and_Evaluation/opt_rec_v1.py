@@ -64,9 +64,14 @@ if __name__=='__main__':
     # Get base forecast
     with open(f'./Base_Forecasts/{generate}_{rootbasef}.json') as file:
         fc = json.load(file)
+
     mean = fc[0][0]
-    var = fc[0][1]
-    cov = np.diag(var)
+    
+    if basefdep == 'Independent':
+        var = fc[0][1]
+        cov = np.diag(var)
+    else:
+        cov = np.cov(fc[0][2])
 
     # Get S and index and new_index
     S = np.matrix(np.array([[0,-1,-1,1],[0,1,1,0],[-1,-1,-1,1],[1,0,0,0],

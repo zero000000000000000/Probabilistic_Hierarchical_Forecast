@@ -50,17 +50,24 @@ if __name__=='__main__':
     # Get base forecast
     with open(f'./Base_Forecasts/{generate}_{rootbasef}_in.json') as file:
         fc = json.load(file)
-    i=0
+    
+    i = 0
     mean = fc[i][0]
-    var = fc[i][1]
-    cov = np.diag(var)
+    if basefdep == 'Independent':
+        var = fc[i][1]
+        cov = np.diag(var)
+    else:
+        cov = np.cov(fc[i][2])
     x = random.multivariate_normal(mean, cov, Q).T
     xs = random.multivariate_normal(mean, cov, Q).T
 
     for i in range(1,W):
         mean = fc[i][0]
-        var = fc[i][1]
-        cov = np.diag(var)
+        if basefdep == 'Independent':
+            var = fc[i][1]
+            cov = np.diag(var)
+        else:
+            cov = np.cov(fc[i][2])
         x = np.append(x,random.multivariate_normal(mean, cov, Q).T,axis=1)
         xs = np.append(xs,random.multivariate_normal(mean, cov, Q).T,axis=1)
 
