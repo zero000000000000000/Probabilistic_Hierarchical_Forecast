@@ -5,7 +5,7 @@ import json
 import matplotlib.pyplot as plt
 
 colors = ["#6A5ACD", "#708090", "#20B2AA", "#FFA07A", "#ADD8E6", "#8B4513",
-          "#BA55D3", "#90EE90", "#FFD700", "#FF6347", "#00CED1","#FF4500"]
+          "#BA55D3", "#90EE90", "#FFD700", "#FF6347", "#00CED1","#FF4500",'blue']
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--generate', type=str, default='WithNoise', help='If there is added noise')
@@ -88,6 +88,20 @@ def plot_avg_crps(data,path1,path):
     #plt.show()
     plt.close()
 
+def integration(opt_data):
+    '''
+    Integrate the results
+    '''
+    opt_crps = opt_data['CRPS']
+    opt_crps = [item for times in opt_crps for item in times]
+
+    opt_es = opt_data['ES']
+    opt_es = [item for times in opt_es for item in times]
+
+    opt_vs = opt_data['VS']
+    return [opt_crps,opt_es,opt_vs]
+
+
 if __name__=='__main__':
 
     # Get params
@@ -104,23 +118,25 @@ if __name__=='__main__':
     # Get opt results
     with open(f'./Evaluation_Result/Results_Opt/{generate}_{rootbasef}_{basefdep}.json','r') as file:
         opt_data = json.load(file)
+
+    with open(f'./Evaluation_Result/Results_Opt/{generate}_{rootbasef}_{basefdep}_v2.json','r') as file:
+        opt_data_v2 = json.load(file)
     
     # Integration
-    opt_crps = opt_data['CRPS']
-    opt_crps = [item for times in opt_crps for item in times]
+    [opt_crps,opt_es,opt_vs] = integration(opt_data)
     r_crps_data['EnergyScore_Opt'] = pd.Series(opt_crps)
-
-    opt_es = opt_data['ES']
-    opt_es = [item for times in opt_es for item in times]
     r_es_data['EnergyScore_Opt'] = pd.Series(opt_es)
-
-    opt_vs = opt_data['VS']
     r_vs_data['EnergyScore_Opt'] = pd.Series(opt_vs)
+
+    [opt_crps_v2,opt_es_v2,opt_vs_v2] = integration(opt_data_v2)
+    r_crps_data['EnergyScore_Opt_v2'] = pd.Series(opt_crps_v2)
+    r_es_data['EnergyScore_Opt_v2'] = pd.Series(opt_es_v2)
+    r_vs_data['EnergyScore_Opt_v2'] = pd.Series(opt_vs_v2)
 
     # Print and plot
     r_crps_data.to_csv(f'./Analyze_Result/CRPS/{generate}_{rootbasef}_{basefdep}.csv')
     r_es_data.to_csv(f'./Analyze_Result/Energy_Score/{generate}_{rootbasef}_{basefdep}.csv')
-    r_es_data.to_csv(f'./Analyze_Result/Variogram_Score/{generate}_{rootbasef}_{basefdep}.csv')
+    r_vs_data.to_csv(f'./Analyze_Result/Variogram_Score/{generate}_{rootbasef}_{basefdep}.csv')
 
 
     plot_avg_energy_score(r_es_data,

@@ -73,7 +73,7 @@ if __name__=='__main__':
                             [0,1,0,0],[0,0,1,0],[0,0,0,1]]))
     new_index = [1,2,3,4,5,6,0]
 
-    G = np.load(f'./Reconcile_and_Evaluation/Gurobipy_Results/{generate}_{rootbasef}_{basefdep}_Gopt.npy')
+    G = np.load(f'./Reconcile_and_Evaluation/Gurobipy_Results_v2/{generate}_{rootbasef}_{basefdep}_Gopt.npy')
 
     # save the 5 times results
     CRPS = []
@@ -111,5 +111,5 @@ if __name__=='__main__':
 
 
     dic={'CRPS':CRPS,'ES':ES,'VS':VS}
-    with open(f'./Evaluation_Result/Results_Opt/{generate}_{rootbasef}_{basefdep}.json', 'w') as file:
+    with open(f'./Evaluation_Result/Results_Opt/{generate}_{rootbasef}_{basefdep}_v2.json', 'w') as file:
         file.write(json.dumps(dic))
