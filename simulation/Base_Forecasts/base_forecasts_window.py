@@ -5,7 +5,6 @@ from statsmodels.tsa.statespace.exponential_smoothing import ExponentialSmoothin
 from tqdm import tqdm
 import json
 import argparse
-import multiprocessing
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--generate', type=str, default='WithNoise', help='If there is added noise')
