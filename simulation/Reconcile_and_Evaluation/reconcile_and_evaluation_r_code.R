@@ -6,6 +6,7 @@ library(jsonlite)
 library(tidyverse)
 library(mvtnorm)
 library(Matrix)
+library(RcppCNPy)
 #Clear workspace
 rm(list=ls())
 
@@ -155,9 +156,16 @@ S<-matrix(c(1,1,1,1,
             0,1,0,0,
             0,0,1,0,
             0,0,0,1),7,4,byrow = T)
-
+S1<-matrix(c(0,-1,-1,1,
+             0,1,1,0,
+             -1,-1,-1,1,
+             1,0,0,0,
+             0,1,0,0,
+             0,0,1,0,
+             0,0,0,1),7,4,byrow = T)
 # Predefine some reconciliation matrices
 
+new_index<-c(2,3,4,5,6,7,1)
 SG_bu<-S%*%cbind(matrix(0,4,3),diag(rep(1,4)))
 SG_ols<-S%*%solve(t(S)%*%S,t(S))
 
@@ -186,6 +194,9 @@ for(z in 1:8){
   #Read in data
   data<-read.csv(paste('.\\Data\\Simulated_Data_',generate,'.csv',sep=''))
   
+  # Read G
+  G_opt <- npyLoad(paste('.\\Reconcile_and_Evaluation\\Gurobipy_Results\\',generate,'_',
+                         rootbasef,'_',depj,'_Gopt.npy',sep=''))
   # Read the Base forecast results
   fc<-fromJSON(paste(".\\Base_Forecasts\\",generate,"_",rootbasef,".json",sep=''))
   fc<-fc[[1]]
@@ -209,6 +220,8 @@ for(z in 1:8){
   res_crps<-NULL
   res_variogramscore<-NULL
   
+  # seed
+  set.seed(12)
   for (j in 1:5){
     # Initialize
     # ES Without immutable series 
@@ -219,12 +232,14 @@ for(z in 1:8){
     JPP<-rep(NA,evalN)
     MinTShr<-rep(NA,evalN)
     MinTSam<-rep(NA,evalN)
+
     
     # ES With immutable series
     OLSv<-rep(NA,evalN)
     WLSv<-rep(NA,evalN)
     MinTShrv<-rep(NA,evalN)
     MinTSamv<-rep(NA,evalN)
+    EnergyScore_Opt<-rep(NA,evalN)
     
     # CRPS without immutable series
     Basec<-rep(NA,M*evalN)
@@ -240,7 +255,7 @@ for(z in 1:8){
     WLScv<-rep(NA,M*evalN)
     MinTShrcv<-rep(NA,M*evalN)
     MinTSamcv<-rep(NA,M*evalN)
-    
+    EnergyScore_Optcv<-rep(NA,M*evalN)
     
     # VS Without immutable series
     Base_vs<-rep(NA,evalN)
@@ -256,6 +271,7 @@ for(z in 1:8){
     WLS_vsv<-rep(NA,evalN)
     MinTShr_vsv<-rep(NA,evalN)
     MinTSam_vsv<-rep(NA,evalN)
+    EnergyScore_Opt_vsv<-rep(NA,evalN)
     
     # Get realisation
     y1<-data[N+i,]
@@ -393,22 +409,35 @@ for(z in 1:8){
     MinTShrcv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
     MinTShr_vsv[i]<-variogram_score(y,newx)
     
+    #EnergyScore_Opt
+    xx<-x[new_index,]
+    xxs<-xs[new_index,]
+    yy<-y[new_index,]
+    EnergyScore_Opt[i]<-energy_score(yy,S1%*%G_opt%*%xx,S1%*%G_opt%*%xxs)
+    crps_v1<-crps(yy,S1%*%G_opt%*%xx,S1%*%G_opt%*%xxs)
+    EnergyScore_Optcv[((i-1)*M+1):(i*M)]<-crps_v1[order(new_index)]
+    
+    EnergyScore_Opt_vsv[i]<-variogram_score(yy,S1%*%G_opt%*%xx)
+    
     res_energyscore<-rbind(res_energyscore,data.frame(t=j,Base=Base,BottomUp=BottomUp,JPP=JPP,OLS=OLS,OLSv=OLSv,
-                                                      WLS=WLS,WLSv=WLSv,MinTSam=MinTSam,MinTSamv=MinTSamv,
-                                                      MinTShr=MinTShr,MinTShrv=MinTShrv))
+                                                      WLS=WLS,WLSv=WLSv,
+                                                      MinTShr=MinTShr,MinTShrv=MinTShrv,
+                                                      EnergyScore_Opt=EnergyScore_Opt))
     res_crps<-rbind(res_crps,data.frame(t=rep(j,M),series=1:M,Basec=Basec,BottomUpc=BottomUpc,JPPc=JPPc,OLSc=OLSc,OLScv=OLScv,
-                                        WLSc=WLSc,WLScv=WLScv,MinTSamc=MinTSamc,MinTSamcv=MinTSamcv,
-                                        MinTShrc=MinTShrc,MinTShrcv=MinTShrcv))
+                                        WLSc=WLSc,WLScv=WLScv,
+                                        MinTShrc=MinTShrc,MinTShrcv=MinTShrcv,
+                                        EnergyScore_Optcv=EnergyScore_Optcv))
     res_variogramscore<-rbind(res_variogramscore,data.frame(t=j,Base_vs=Base_vs,BottomUp_vs=BottomUp_vs,JPP_vs=JPP_vs,OLS_vs=OLS_vs,OLS_vsv=OLS_vsv,
-                                                         WLS_vs=WLS_vs,WLS_vsv=WLS_vsv,MinTSam_vs=MinTSam_vs,MinTSam_vsv=MinTSam_vsv,
-                                                         MinTShr_vs=MinTShr_vs,MinTShr_vsv=MinTShr_vsv))
+                                                         WLS_vs=WLS_vs,WLS_vsv=WLS_vsv,
+                                                         MinTShr_vs=MinTShr_vs,MinTShr_vsv=MinTShr_vsv,
+                                                         EnergyScore_Opt_vsv=EnergyScore_Opt_vsv))
     
   }
-  write.csv(res_energyscore,paste('.\\Evaluation_Result\\Energy_Score\\',generate,'_',
+  write.csv(res_energyscore,paste('.\\Evaluation_Result_new\\Energy_Score\\',generate,'_',
                                   rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
-  write.csv(res_crps,paste('.\\Evaluation_Result\\CRPS\\',generate,'_',
+  write.csv(res_crps,paste('.\\Evaluation_Result_new\\CRPS\\',generate,'_',
                            rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
-  write.csv(res_variogramscore,paste('.\\Evaluation_Result\\Variogram_Score\\',generate,'_',
+  write.csv(res_variogramscore,paste('.\\Evaluation_Result_new\\Variogram_Score\\',generate,'_',
                            rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
 }
 
