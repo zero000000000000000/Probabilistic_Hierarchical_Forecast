@@ -16,7 +16,7 @@ if __name__ == '__main__':
     basefdep = args.basefdep
 
     df = pd.read_csv(f'./Analyze_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}_mean_crps.csv').iloc[:,1:]
-
+    df.columns = ['Base','BottomUp','JPP','OLS','OLSv','WLS','WLSv','MinTShr','MinTShrv','EnergyScore_Opt']
     rank_res = df.rank(axis=1)
     k=10
     N=7
@@ -27,10 +27,12 @@ if __name__ == '__main__':
     xerr = d**0.5*r
 
     # plot:
+    plt.rcParams.update({'font.size': 20})
     fig, ax = plt.subplots(figsize=(12, 9))
     ax.set_facecolor('white')
     ax.errorbar(x, y, xerr = xerr, fmt='o', linewidth=2, capsize=6)
     ax.set_yticks(list(range(0,k,1)))
     ax.set_yticklabels(list(x.index))
-    ax.set_title('Tourism::MCB Test')
+    ax.set_title(f'MCB Test::{generate}_{rootbasef}_{basefdep}')
+    plt.tight_layout()
     plt.savefig(f'./Plot_new/MCB_Test_{generate}_{rootbasef}_{basefdep}.png')

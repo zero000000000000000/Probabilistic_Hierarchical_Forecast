@@ -2,6 +2,7 @@
 setwd('D:\\HierarchicalCode\\experiment')
 #install.packages("jsonlite")
 library(jsonlite)
+library(RcppCNPy)
 # Load library
 library(tidyverse)
 library(mvtnorm)
@@ -149,8 +150,8 @@ M<-111 #Number of series
 
 # Read Smat
 S<-fromJSON('./Data/Tourism/Tourism_Smat.json')
-S1<-fromJSON('.\\tourism_s_json.json')
-G_opt <- npyLoad('./Reconcile_and_Evaluation/Tourism_G_early_stop_2.npy')
+S1<-fromJSON('.\\Reconcile_and_Evaluation\\tourism_s_json.json')
+G_opt <- npyLoad('./Reconcile_and_Evaluation/Tourism_ETS_Regularization_G.npy')
 new_index<-c(2:111,1)
 # Predefine
 SG_bu<-S%*%cbind(matrix(0,76,35),diag(rep(1,76)))
@@ -359,7 +360,7 @@ res_variogramscore<-data.frame(Base_vs=Base_vs,BottomUp_vs=BottomUp_vs,JPP_vs=JP
                                EnergyScore_Opt_vsv=EnergyScore_Opt_vsv)
 
 
-write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism.csv',row.names=FALSE)
-write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism.csv',row.names=FALSE)
-write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism.csv',row.names=FALSE)
+write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_Regularization.csv',row.names=FALSE)
+write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_Regularization.csv',row.names=FALSE)
+write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_Regularization.csv',row.names=FALSE)
 

@@ -27,10 +27,12 @@ if __name__ == '__main__':
     xerr = d**0.5*r
 
     # plot:
+    plt.rcParams.update({'font.size': 14})
     fig, ax = plt.subplots(figsize=(12, 9))
+    
     ax.set_facecolor('white')
     ax.errorbar(x, y, xerr = xerr, fmt='o', linewidth=2, capsize=6)
     ax.set_yticks(list(range(0,k,1)))
     ax.set_yticklabels(list(x.index))
-    ax.set_title('Tourism::MCB Test')
+    ax.set_title(f'MCB Test::{generate}_{rootbasef}_{basefdep}')
     plt.savefig(f'./Plot/MCB_Test_{generate}_{rootbasef}_{basefdep}.png')
