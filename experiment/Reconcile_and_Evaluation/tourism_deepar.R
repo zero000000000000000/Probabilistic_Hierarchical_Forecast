@@ -151,8 +151,7 @@ M<-111 #Number of series
 # Read Smat
 S<-fromJSON('./Data/Tourism/Tourism_Smat.json')
 S1<-fromJSON('.\\Reconcile_and_Evaluation\\tourism_s_json.json')
-G_opt_1 <- npyLoad('./Reconcile_and_Evaluation/Tourism_ETS_G.npy')
-G_opt_2 <- npyLoad('./Reconcile_and_Evaluation/Tourism_ETS_Regularization_G.npy')
+G_opt <- npyLoad('./Reconcile_and_Evaluation/Tourism_ETS_Regularization_G.npy')
 new_index<-c(2:111,1)
 # Predefine
 SG_bu<-S%*%cbind(matrix(0,76,35),diag(rep(1,76)))
@@ -163,40 +162,57 @@ cols_to_remove <- 1:2
 data<-read.csv('./Data/Tourism/Tourism_process.csv')[,-cols_to_remove]
 
 # Read base forecasts
-fc<-fromJSON('./Reconcile_and_Evaluation/Tourism_out_process.json')
-fc<-fc[[1]]
+fc1<-fromJSON('./Base_Forecasts/Tourism_deepar.json')
+fc<-list()
 for(i in 1:evalN){
-  names(fc[[i]])<-c('fc_mean','fc_var','resid','fitted')
+  fc[[i]] <- list(fc_mean=fc1[i,1,],fc_var=fc1[i,2,])
+}
+
+for(i in 1:evalN){
   sd_list<-NULL
   for (j in 1:M){
     sd_list<-c(sd_list,sqrt(fc[[i]]$fc_var[j]))
   }
   fc[[i]]$fc_sd<-sd_list
-  fc[[i]]$fc_Sigma_sam<-cov(t(fc[[i]]$resid))
-  fc[[i]]$fc_Sigma_shr<-shrink.estim(t(fc[[i]]$resid))
 }
 
 # Initialize
 # ES Without immutable series 
 Base<-rep(NA,evalN)
+BottomUp<-rep(NA,evalN)
+OLS<-rep(NA,evalN)
+WLS<-rep(NA,evalN)
+JPP<-rep(NA,evalN)
 
 # ES With immutable series
-EnergyScore_Opt_1<-rep(NA,evalN)
-EnergyScore_Opt_2<-rep(NA,evalN)
+OLSv<-rep(NA,evalN)
+WLSv<-rep(NA,evalN)
+EnergyScore_Opt<-rep(NA,evalN)
 
 # CRPS without immutable series
 Basec<-rep(NA,M*evalN)
+BottomUpc<-rep(NA,M*evalN)
+OLSc<-rep(NA,M*evalN)
+WLSc<-rep(NA,M*evalN)
+JPPc<-rep(NA,M*evalN)
 
 # CRPS With immutable series
-EnergyScore_Optcv_1<-rep(NA,M*evalN)
-EnergyScore_Optcv_2<-rep(NA,M*evalN)
+OLScv<-rep(NA,M*evalN)
+WLScv<-rep(NA,M*evalN)
+EnergyScore_Optcv<-rep(NA,M*evalN)
 
 # VS Without immutable series
 Base_vs<-rep(NA,evalN)
+BottomUp_vs<-rep(NA,evalN)
+OLS_vs<-rep(NA,evalN)
+WLS_vs<-rep(NA,evalN)
+JPP_vs<-rep(NA,evalN)
 
 # VS With immutable series
-EnergyScore_Opt_vsv_1<-rep(NA,evalN)
-EnergyScore_Opt_vsv_2<-rep(NA,evalN)
+OLS_vsv<-rep(NA,evalN)
+WLS_vsv<-rep(NA,evalN)
+EnergyScore_Opt_vsv<-rep(NA,evalN)
+
 
 res_energyscore<-NULL
 res_crps<-NULL
@@ -214,9 +230,9 @@ for(i in 1:evalN){
   fc_i<-fc[[i]]
   
   fc_mean<-fc_i$fc_mean
-  fc_sigma<-fc_i$fc_Sigma_sam
-  x<-t(rmvnorm(Q,fc_mean,fc_sigma))
-  xs<-t(rmvnorm(Q,fc_mean,fc_sigma))
+  fc_sd<-fc_i$fc_sd
+  x<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
+  xs<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
   
   # Set the immutable point and Get the basis series
   basis_lis<-forecast.basis_series(S,immu_set=c(1))
@@ -227,33 +243,86 @@ for(i in 1:evalN){
   Base_vs[i]<-variogram_score(y,x)
   
   
+  #Bottom up
+  newx<-SG_bu%*%x
+  newxs<-SG_bu%*%xs
+  BottomUp[i]<-energy_score(y,newx,newxs)
+  BottomUpc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  BottomUp_vs[i]<-variogram_score(y,newx)
+  
+  #OLS
+  newx<-SG_ols%*%x
+  newxs<-SG_ols%*%xs
+  OLS[i]<-energy_score(y,newx,newxs)
+  OLSc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  OLS_vs[i]<-variogram_score(y,newx)
+  
+  newx <- t(forecast.reconcile(t(x), 
+                               S, 
+                               diag(rep(1,M)),
+                               basis_lis$mutable_basis,
+                               basis_lis$immutable_basis))
+  newxs <- t(forecast.reconcile(t(xs), 
+                                S, 
+                                diag(rep(1,M)),
+                                basis_lis$mutable_basis,
+                                basis_lis$immutable_basis))
+  OLSv[i]<-energy_score(y,newx,newxs)
+  OLScv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  OLS_vsv[i]<-variogram_score(y,newx)
+  
+  #WLS (structural)
+  SW_wls<-solve(diag(rowSums(S)),S)
+  SG_wls<-S%*%solve(t(SW_wls)%*%S,t(SW_wls))
+  newx<-SG_wls%*%x
+  newxs<-SG_wls%*%xs
+  WLS[i]<-energy_score(y,newx,newxs)
+  WLSc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  WLS_vs[i]<-variogram_score(y,newx)
+  
+  newx <- t(forecast.reconcile(t(x), 
+                               S, 
+                               diag(rowSums(S)),
+                               basis_lis$mutable_basis,
+                               basis_lis$immutable_basis))
+  newxs <- t(forecast.reconcile(t(xs), 
+                                S, 
+                                diag(rowSums(S)),
+                                basis_lis$mutable_basis,
+                                basis_lis$immutable_basis))
+  WLSv[i]<-energy_score(y,newx,newxs)
+  WLScv[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  WLS_vsv[i]<-variogram_score(y,newx)
+  
+  #JPP
+  newx<-SG_wls%*%t(apply(x,1,sort))
+  newxs<-SG_wls%*%t(apply(xs,1,sort))
+  JPP[i]<-energy_score(y,newx,newxs)
+  JPPc[((i-1)*M+1):(i*M)]<-crps(y,newx,newxs)
+  JPP_vs[i]<-variogram_score(y,newx)
+  
   # Energyscore opt
   xx<-x[new_index,]
   xxs<-xs[new_index,]
   yy<-y[new_index,]
-  EnergyScore_Opt_1[i]<-energy_score(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
-  crps_1<-crps(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
-  EnergyScore_Optcv_1[((i-1)*M+1):(i*M)]<-crps_1[order(new_index)]
-  EnergyScore_Opt_vsv_1[i]<-variogram_score(yy,S1%*%G_opt_1%*%xx)
-  
-  EnergyScore_Opt_2[i]<-energy_score(yy,S1%*%G_opt_2%*%xx,S1%*%G_opt_2%*%xxs)
-  crps_2<-crps(yy,S1%*%G_opt_2%*%xx,S1%*%G_opt_2%*%xxs)
-  EnergyScore_Optcv_2[((i-1)*M+1):(i*M)]<-crps_2[order(new_index)]
-  EnergyScore_Opt_vsv_2[i]<-variogram_score(yy,S1%*%G_opt_2%*%xx)
+  EnergyScore_Opt[i]<-energy_score(yy,S1%*%G_opt%*%xx,S1%*%G_opt%*%xxs)
+  crps_v1<-crps(yy,S1%*%G_opt%*%xx,S1%*%G_opt%*%xxs)
+  EnergyScore_Optcv[((i-1)*M+1):(i*M)]<-crps_v1[order(new_index)]
+  EnergyScore_Opt_vsv[i]<-variogram_score(yy,S1%*%G_opt%*%xx)
 }
 
-res_energyscore<-data.frame(Base=Base,
-                            EnergyScore_Opt_1=EnergyScore_Opt_1,
-                            EnergyScore_Opt_2=EnergyScore_Opt_2)
-res_crps<-data.frame(series=1:M,Basec=Basec,
-                     EnergyScore_Optcv_1=EnergyScore_Optcv_1,
-                     EnergyScore_Optcv_2=EnergyScore_Optcv_2)
-res_variogramscore<-data.frame(Base_vs=Base_vs,
-                               EnergyScore_Opt_vsv_1=EnergyScore_Opt_vsv_1,
-                               EnergyScore_Opt_vsv_2=EnergyScore_Opt_vsv_2)
+res_energyscore<-data.frame(Base=Base,BottomUp=BottomUp,JPP=JPP,OLS=OLS,OLSv=OLSv,
+                            WLS=WLS,WLSv=WLSv,
+                            EnergyScore_Opt=EnergyScore_Opt)
+res_crps<-data.frame(series=1:M,Basec=Basec,BottomUpc=BottomUpc,JPPc=JPPc,OLSc=OLSc,OLScv=OLScv,
+                     WLSc=WLSc,WLScv=WLScv,
+                     EnergyScore_Optcv=EnergyScore_Optcv)
+res_variogramscore<-data.frame(Base_vs=Base_vs,BottomUp_vs=BottomUp_vs,JPP_vs=JPP_vs,OLS_vs=OLS_vs,OLS_vsv=OLS_vsv,
+                               WLS_vs=WLS_vs,WLS_vsv=WLS_vsv,
+                               EnergyScore_Opt_vsv=EnergyScore_Opt_vsv)
 
 
-write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_Regularization.csv',row.names=FALSE)
-write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_Regularization.csv',row.names=FALSE)
-write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_Regularization.csv',row.names=FALSE)
+write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_deepar.csv',row.names=FALSE)
+write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_deepar.csv',row.names=FALSE)
+write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_deepar.csv',row.names=FALSE)
 
