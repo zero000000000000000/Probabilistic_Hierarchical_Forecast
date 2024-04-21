@@ -58,7 +58,7 @@ def objective(trial):
         loss.append(loss_i)
 
         if early_stopping(loss_i):
-            print(f"Early stopping triggered at epoch {num_iterations + 1}.")
+            print(f"Early stopping triggered at epoch {iteration + 1}.")
             break
         t += 1
         

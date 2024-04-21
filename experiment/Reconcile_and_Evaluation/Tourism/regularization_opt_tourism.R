@@ -158,9 +158,8 @@ M<-111 #Number of series
 
 # Read Smat
 S<-fromJSON('./Data/Tourism/Tourism_Smat.json')
-S1<-fromJSON('.\\Reconcile_and_Evaluation\\tourism_s_json.json')
-G_opt_1 <- npyLoad('./Reconcile_and_Evaluation/Tourism_ETS_G.npy')
-G_opt_2 <- npyLoad('./Reconcile_and_Evaluation/Tourism_ETS_Regularization_G.npy')
+S1<-fromJSON('.\\Reconcile_and_Evaluation\\Tourism\\tourism_s_json.json')
+G_opt_1 <- npyLoad('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_G_indep.npy')
 new_index<-c(2:111,1)
 # Predefine
 SG_bu<-S%*%cbind(matrix(0,76,35),diag(rep(1,76)))
@@ -171,7 +170,7 @@ cols_to_remove <- 1:2
 data<-read.csv('./Data/Tourism/Tourism_process.csv')[,-cols_to_remove]
 
 # Read base forecasts
-fc<-fromJSON('./Reconcile_and_Evaluation/Tourism_out_process.json')
+fc<-fromJSON('./Reconcile_and_Evaluation/Tourism/Tourism_out_process.json')
 fc<-fc[[1]]
 for(i in 1:evalN){
   names(fc[[i]])<-c('fc_mean','fc_var','resid','fitted')
@@ -231,60 +230,57 @@ for(i in 1:evalN){
   fc_i<-fc[[i]]
   
   fc_mean<-fc_i$fc_mean
-  fc_sigma<-fc_i$fc_Sigma_sam
-  x<-t(rmvnorm(Q,fc_mean,fc_sigma))
-  xs<-t(rmvnorm(Q,fc_mean,fc_sigma))
+  fc_sd<-fc_i$fc_sd
+  x<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
+  xs<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
   
   # Set the immutable point and Get the basis series
   # basis_lis<-forecast.basis_series(S,immu_set=c(1))
   
   #Base forecast
-  # Base[i]<-energy_score(y,x,xs)
-  # Basec[((i-1)*M+1):(i*M)]<-crps(y,x,xs)
-  # Base_vs[i]<-variogram_score(y,x)
-  Basesc[((i-1)*M+1):(i*M)]<-scrps(y,x,xs)
+  Base[i]<-energy_score(y,x,xs)
+  Basec[((i-1)*M+1):(i*M)]<-crps(y,x,xs)
+  Base_vs[i]<-variogram_score(y,x)
+  # Basesc[((i-1)*M+1):(i*M)]<-scrps(y,x,xs)
   
   # Energyscore opt
   xx<-x[new_index,]
   xxs<-xs[new_index,]
   yy<-y[new_index,]
-  # EnergyScore_Opt_1[i]<-energy_score(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
-  # crps_1<-crps(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
-  # EnergyScore_Optcv_1[((i-1)*M+1):(i*M)]<-crps_1[order(new_index)]
-  # EnergyScore_Opt_vsv_1[i]<-variogram_score(yy,S1%*%G_opt_1%*%xx)
-  scrps_1<-scrps(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
-  EnergyScore_Optscv_1[((i-1)*M+1):(i*M)]<-scrps_1[order(new_index)]
+  EnergyScore_Opt_1[i]<-energy_score(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
+  crps_1<-crps(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
+  EnergyScore_Optcv_1[((i-1)*M+1):(i*M)]<-crps_1[order(new_index)]
+  EnergyScore_Opt_vsv_1[i]<-variogram_score(yy,S1%*%G_opt_1%*%xx)
+  # scrps_1<-crps(yy,S1%*%G_opt_1%*%xx,S1%*%G_opt_1%*%xxs)
+  # EnergyScore_Optscv_1[((i-1)*M+1):(i*M)]<-scrps_1[order(new_index)]
   
   # EnergyScore_Opt_2[i]<-energy_score(yy,S1%*%G_opt_2%*%xx,S1%*%G_opt_2%*%xxs)
   # crps_2<-crps(yy,S1%*%G_opt_2%*%xx,S1%*%G_opt_2%*%xxs)
   # EnergyScore_Optcv_2[((i-1)*M+1):(i*M)]<-crps_2[order(new_index)]
   # EnergyScore_Opt_vsv_2[i]<-variogram_score(yy,S1%*%G_opt_2%*%xx)
-  scrps_2<-scrps(yy,S1%*%G_opt_2%*%xx,S1%*%G_opt_2%*%xxs)
-  EnergyScore_Optscv_2[((i-1)*M+1):(i*M)]<-scrps_2[order(new_index)]
+  # scrps_2<-scrps(yy,S1%*%G_opt_2%*%xx,S1%*%G_opt_2%*%xxs)
+  # EnergyScore_Optscv_2[((i-1)*M+1):(i*M)]<-scrps_2[order(new_index)]
 }
 
-# res_energyscore<-data.frame(Base=Base,
-#                             EnergyScore_Opt_1=EnergyScore_Opt_1,
-#                             EnergyScore_Opt_2=EnergyScore_Opt_2)
-# res_crps<-data.frame(series=1:M,Basec=Basec,
-#                      EnergyScore_Optcv_1=EnergyScore_Optcv_1,
-#                      EnergyScore_Optcv_2=EnergyScore_Optcv_2)
-# res_variogramscore<-data.frame(Base_vs=Base_vs,
-#                                EnergyScore_Opt_vsv_1=EnergyScore_Opt_vsv_1,
-#                                EnergyScore_Opt_vsv_2=EnergyScore_Opt_vsv_2)
-res_scrps<-data.frame(series=1:M,Basesc=Basesc,
-                     EnergyScore_Optscv_1=EnergyScore_Optscv_1,
-                     EnergyScore_Optscv_2=EnergyScore_Optscv_2)
+res_energyscore<-data.frame(Base=Base,
+                            EnergyScore_Opt_1=EnergyScore_Opt_1)
+res_crps<-data.frame(series=1:M,Basec=Basec,
+                     EnergyScore_Optcv_1=EnergyScore_Optcv_1)
+res_variogramscore<-data.frame(Base_vs=Base_vs,
+                               EnergyScore_Opt_vsv_1=EnergyScore_Opt_vsv_1)
+# res_scrps<-data.frame(series=1:M,Basesc=Basesc,
+#                      EnergyScore_Optscv_1=EnergyScore_Optscv_1,
+#                      EnergyScore_Optscv_2=EnergyScore_Optscv_2)
 
-# write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_Regularization.csv',row.names=FALSE)
-# write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_Regularization.csv',row.names=FALSE)
-# write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_Regularization.csv',row.names=FALSE)
-write.csv(res_scrps,'.\\Evaluation_Result_new\\SCRPS\\Tourism_Regularization.csv',row.names=FALSE)
+write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_Regularization_Indep.csv',row.names=FALSE)
+write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_Regularization_Indep.csv',row.names=FALSE)
+write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_Regularization_Indep.csv',row.names=FALSE)
+# write.csv(res_scrps,'.\\Evaluation_Result_new\\SCRPS\\Tourism_Regularization_Indep.csv',row.names=FALSE)
 
-result <- res_scrps %>%
-  group_by(series) %>%
-  summarise(
-    mean = mean(Basesc, na.rm=TRUE),
-    mean_value1 = mean(EnergyScore_Optscv_1, na.rm = TRUE),
-    mean_value2 = mean(EnergyScore_Optscv_2, na.rm = TRUE),
-  )
+# result <- res_scrps %>%
+#   group_by(series) %>%
+#   summarise(
+#     mean = mean(Basesc, na.rm=TRUE),
+#     mean_value1 = mean(EnergyScore_Optscv_1, na.rm = TRUE),
+#     mean_value2 = mean(EnergyScore_Optscv_2, na.rm = TRUE),
+#   )

@@ -40,14 +40,14 @@ if __name__ == '__main__':
     stride = 12
 
     # Read transformed Smat and new_index
-    with open('./Reconcile_and_Evaluation/Tourism_tranformed_Smat.json','r') as file:
+    with open('./Reconcile_and_Evaluation/Tourism/Tourism_tranformed_Smat.json','r') as file:
         S = json.load(file)
     S = np.array(eval(S[0]))
 
     new_index = [i for i in range(1,111)]+[0]
 
     # Process the base forecasts data
-    with open('./Base_Forecasts/Tourism_in.json','r') as file2:
+    with open('./Base_Forecasts/Tourism/Tourism_in.json','r') as file2:
         fc = json.load(file2)
     
     fc_list = []
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     for i in range(W):
         for k in range(stride):
             mean.append(np.array(fc_res[i][k][0]))
-            cov.append(np.cov(fc_res[i][k][2]))
+            cov.append(np.diag(np.array(fc_res[i][k][1])))
 
     # Read raw data
     data = pd.read_csv('./Data/Tourism/Tourism_process.csv').iloc[N1:N,2:].reset_index(drop=True)
@@ -124,7 +124,7 @@ if __name__ == '__main__':
         G_list.append(G)
 
         if early_stopping(loss_i):
-            print(f"Early stopping triggered at epoch {num_iterations + 1}.")
+            print(f"Early stopping triggered at epoch {iteration + 1}.")
             break
         t += 1
         
@@ -140,14 +140,14 @@ if __name__ == '__main__':
         dG[(m1-1),] = [0]*n
 
     ind = loss.index(min(loss))
-    np.save('./Reconcile_and_Evaluation/Tourism_ETS_Regularization_min_G.npy',G_list[ind])
-    np.save('./Reconcile_and_Evaluation/Tourism_ETS_Reluarization_loss.npy',loss)
-    np.save('./Reconcile_and_Evaluation/Tourism_ETS_Regularization_G.npy',G)
+    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_min_G_indep.npy',G_list[ind])
+    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Reluarization_loss_indep.npy',loss)
+    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_G_indep.npy',G)
 
     x_axis = list(range(1,len(loss)+1))
     plt.plot(x_axis,loss,'-r')
-    plt.title('能量得分迭代图')
+    plt.title('Tourism::ETS 能量得分迭代图')
     plt.xlabel('迭代次数')
     plt.ylabel('能量得分')
-    plt.savefig('./Tourism_ETS_Regularization.png')
+    plt.savefig('./Tourism_ETS_indep.png')
     plt.show()

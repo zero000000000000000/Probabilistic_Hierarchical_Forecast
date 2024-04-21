@@ -150,8 +150,8 @@ M<-111 #Number of series
 
 # Read Smat
 S<-fromJSON('./Data/Tourism/Tourism_Smat.json')
-S1<-fromJSON('.\\Reconcile_and_Evaluation\\tourism_s_json.json')
-G_opt <- npyLoad('./Reconcile_and_Evaluation/Tourism_ETS_Regularization_G.npy')
+S1<-fromJSON('.\\Reconcile_and_Evaluation\\Tourism\\tourism_s_json.json')
+G_opt <- npyLoad('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_G_indep.npy')
 new_index<-c(2:111,1)
 # Predefine
 SG_bu<-S%*%cbind(matrix(0,76,35),diag(rep(1,76)))
@@ -162,7 +162,7 @@ cols_to_remove <- 1:2
 data<-read.csv('./Data/Tourism/Tourism_process.csv')[,-cols_to_remove]
 
 # Read base forecasts
-fc<-fromJSON('./Reconcile_and_Evaluation/Tourism_out_process.json')
+fc<-fromJSON('./Reconcile_and_Evaluation/Tourism/Tourism_out_process.json')
 fc<-fc[[1]]
 for(i in 1:evalN){
   names(fc[[i]])<-c('fc_mean','fc_var','resid','fitted')
@@ -241,9 +241,9 @@ for(i in 1:evalN){
   fc_i<-fc[[i]]
   
   fc_mean<-fc_i$fc_mean
-  fc_sigma<-fc_i$fc_Sigma_sam
-  x<-t(rmvnorm(Q,fc_mean,fc_sigma))
-  xs<-t(rmvnorm(Q,fc_mean,fc_sigma))
+  fc_sd<-fc_i$fc_sd
+  x<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
+  xs<-matrix(rnorm((Q*M),mean=fc_mean,sd=fc_sd),M,Q)
 
   # Set the immutable point and Get the basis series
   basis_lis<-forecast.basis_series(S,immu_set=c(1))
