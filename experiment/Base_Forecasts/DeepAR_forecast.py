@@ -13,7 +13,7 @@ df = pd.read_csv('./Base_Forecasts/Tourism_process_for_deepar.csv')
 df.set_index('Date',inplace=True)
 #df.index = pd.to_datetime(df.index).dt.strftime('%Y-%m-%d %H:%M:%S')
 prediction_length = 12
-freq = 'M'
+freq = 'MS'
 split_date = pd.to_datetime('2016-01-01').strftime('%Y-%m-%d %H:%M:%S')
 train = df[df.index < split_date]
 test = df[df.index >= split_date]
@@ -51,7 +51,7 @@ train_ds = PandasDataset.from_long_dataframe(train_standard.iloc[:,[0,1,2,3]],
 # Estimator
 estimator = DeepAREstimator(freq=freq,
                             prediction_length=prediction_length,
-                            context_length=4*prediction_length,
+                            context_length=10*prediction_length,
                             num_layers=3,
                             hidden_size=40,
                             lr=1e-3,
@@ -61,8 +61,9 @@ estimator = DeepAREstimator(freq=freq,
                             num_feat_static_real=3,
                             distr_output=NormalOutput(),
                             scaling=False,
+                            num_parallel_samples=1000,
                             batch_size=32,
-                            trainer_kwargs={'accelerator':'cpu','max_epochs':100})
+                            trainer_kwargs={'accelerator':'cpu','max_epochs':1000})
 
 # Train
 predictor = estimator.train(train_ds,num_workers=4)
