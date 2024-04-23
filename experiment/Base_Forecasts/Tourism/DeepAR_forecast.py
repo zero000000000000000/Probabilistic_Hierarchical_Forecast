@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from gluonts.dataset.pandas import PandasDataset
 from gluonts.torch.model.deepar import DeepAREstimator
-from gluonts.torch.distributions import NegativeBinomialOutput
+#from gluonts.torch.distributions import NegativeBinomialOutput
 from gluonts.torch.distributions import NormalOutput
 from gluonts.evaluation import make_evaluation_predictions
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ train_static.set_index('Node',inplace=True)
 
 train_group = train.groupby('Node')
 standardized_params = {}
-train_standard = train
+train_standard = train.iloc[:,:]
 for cat,group in train_group:
     train_group = train.groupby('Node')
     means = group['Value'].mean()
@@ -63,7 +63,7 @@ estimator = DeepAREstimator(freq=freq,
                             scaling=False,
                             num_parallel_samples=1000,
                             batch_size=32,
-                            trainer_kwargs={'accelerator':'cpu','max_epochs':1000})
+                            trainer_kwargs={'accelerator':'gpu','max_epochs':1000})
 
 # Train
 predictor = estimator.train(train_ds,num_workers=4)
@@ -83,7 +83,7 @@ test_ds = PandasDataset.from_long_dataframe(test.iloc[:,[0,1,2,3]],
                                              static_features=test_static,
                                              timestamp='Date',
                                              freq='M')
-forecast_it, ts_it = make_evaluation_predictions(dataset=test_ds, predictor=predictor,num_samples=100)
+forecast_it, ts_it = make_evaluation_predictions(dataset=test_ds, predictor=predictor,num_samples=1000)
 forecasts = list(forecast_it)
 tests = list(ts_it)
 

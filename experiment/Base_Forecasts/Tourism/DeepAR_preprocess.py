@@ -61,4 +61,4 @@ df2['State'] = df2['Node'].apply(get_state)
 lis3 = ['M']
 lis3.extend(level_1)
 df2['State'] = pd.Categorical(df2['State'], categories=lis3, ordered=True).codes
-df2.to_csv('./Base_Forecasts/Tourism_process_for_deepar.csv',index=True)
+df2.to_csv('./Base_Forecasts/Tourism/Tourism_process_for_deepar.csv',index=True)
