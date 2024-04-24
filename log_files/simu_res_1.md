@@ -4,7 +4,7 @@
 
 没有无偏性条件：
 
-![image-20240327001134696](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327001134696.png)
+![image-20240327001134696](D:\HierarchicalCode\log_files\Typora_images\image-20240327001134696.png)
 
 加了无偏性条件：找不到解
 
@@ -16,7 +16,7 @@
 
 没有无偏性条件：
 
-![image-20240327002353498](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327002353498.png)
+![image-20240327002353498](D:\HierarchicalCode\log_files\Typora_images\image-20240327002353498.png)
 
 加了无偏性条件：找不到解
 
@@ -26,7 +26,7 @@
 
 没有无偏性条件：
 
-![image-20240327002801133](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327002801133.png)
+![image-20240327002801133](D:\HierarchicalCode\log_files\Typora_images\image-20240327002801133.png)
 
 加了无偏性条件：找不到解
 
@@ -34,19 +34,19 @@
 
 提前2期：
 
-![image-20240327170836264](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327170836264.png)
+![image-20240327170836264](D:\HierarchicalCode\log_files\Typora_images\image-20240327170836264.png)
 
 提前3期：
 
-![image-20240327171648022](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327171648022.png)
+![image-20240327171648022](D:\HierarchicalCode\log_files\Typora_images\image-20240327171648022.png)
 
 提前4期：
 
-![image-20240327173124468](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327173124468.png)
+![image-20240327173124468](D:\HierarchicalCode\log_files\Typora_images\image-20240327173124468.png)
 
-![image-20240327172036232](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327172036232.png)
+![image-20240327172036232](D:\HierarchicalCode\log_files\Typora_images\image-20240327172036232.png)
 
-![image-20240327173231413](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327173231413.png)
+![image-20240327173231413](D:\HierarchicalCode\log_files\Typora_images\image-20240327173231413.png)
 
 
 
@@ -62,7 +62,7 @@
 
 有不可变节点&无约束（2）：
 
-![image-20240327183955374](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20240327183955374.png)
+![image-20240327183955374](D:\HierarchicalCode\log_files\Typora_images\image-20240327183955374.png)
 
 
 
