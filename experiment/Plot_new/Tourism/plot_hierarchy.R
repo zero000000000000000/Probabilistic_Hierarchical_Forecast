@@ -1,5 +1,5 @@
 # Libraries
-#install.packages('ggraph')
+install.packages('ggraph')
 library(ggraph)
 library(igraph)
 library(tidyverse)
@@ -10,7 +10,7 @@ library(RColorBrewer)
 # edges=rbind(d1, d2)
 
 library(jsonlite)
-e<-fromJSON('D:\\HierarchicalCode\\experiment\\Plot_new\\Wiki\\Hierarchy_info.json')
+e<-fromJSON('D:\\HierarchicalCode\\experiment\\Plot_new\\Tourism\\Hierarchy_info.json')
 edge<-matrix(e,ncol=2,byrow=TRUE)
 edge<-as.data.frame(edge)
 names(edge)<-c('from','to')
@@ -51,7 +51,7 @@ ggraph(mygraph, layout = 'dendrogram', circular = TRUE) +
     legend.position="none",
     plot.margin=unit(c(0,0,0,0),"cm"),
     plot.title = element_text(hjust = 0.5,
-                              margin = margin(t = 20, b = 20, l = 0, r = 0))  # 标题上方和下方的边距  # 居中标题
+                              margin = margin(t = 20, b = 20, l = 0, r = 0))  # 鏍囬涓婃柟鍜屼笅鏂圭殑杈硅窛  # 灞呬腑鏍囬
   ) +
-  coord_fixed(ratio = 1)
+  coord_fixed(ratio = 1)+
   expand_limits(x = c(-1.3, 1.3), y = c(-1.3, 1.3))
