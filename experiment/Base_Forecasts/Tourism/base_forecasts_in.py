@@ -71,7 +71,7 @@ if __name__ == '__main__':
         forecast_results_in.append(res.get())
     
     # Save the results
-    with open(f'./Base_Forecasts/{dataset}_in.json','w') as file:
+    with open(f'./Base_Forecasts/{dataset}/{dataset}_in.json','w') as file:
         file.write(json.dumps(forecast_results_in))
 
     et = time.time()

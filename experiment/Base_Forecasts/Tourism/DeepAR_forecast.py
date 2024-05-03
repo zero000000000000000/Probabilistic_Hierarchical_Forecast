@@ -32,7 +32,6 @@ train_group = train.groupby('Node')
 standardized_params = {}
 train_standard = train.iloc[:,:]
 for cat,group in train_group:
-    train_group = train.groupby('Node')
     means = group['Value'].mean()
     stds = group['Value'].std()
     standardized_params[cat] = {'mean':means,'std':stds}
@@ -60,6 +59,7 @@ estimator = DeepAREstimator(freq=freq,
                             num_feat_dynamic_real=1,
                             num_feat_static_real=3,
                             distr_output=NormalOutput(),
+                            patience=10,
                             scaling=False,
                             num_parallel_samples=1000,
                             batch_size=32,

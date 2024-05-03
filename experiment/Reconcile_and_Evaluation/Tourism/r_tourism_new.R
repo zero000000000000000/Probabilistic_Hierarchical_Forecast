@@ -151,7 +151,7 @@ M<-111 #Number of series
 # Read Smat
 S<-fromJSON('./Data/Tourism/Tourism_Smat.json')
 S1<-fromJSON('.\\Reconcile_and_Evaluation\\Tourism\\tourism_s_json.json')
-G_opt <- npyLoad('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_G_indep.npy')
+G_opt <- npyLoad('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_G_indep_optuna.npy')
 new_index<-c(2:111,1)
 # Predefine
 SG_bu<-S%*%cbind(matrix(0,76,35),diag(rep(1,76)))
@@ -163,7 +163,7 @@ data<-read.csv('./Data/Tourism/Tourism_process.csv')[,-cols_to_remove]
 
 # Read base forecasts
 fc<-fromJSON('./Reconcile_and_Evaluation/Tourism/Tourism_out_process.json')
-fc<-fc[[1]]
+# fc<-fc[[1]]
 for(i in 1:evalN){
   names(fc[[i]])<-c('fc_mean','fc_var','resid','fitted')
   sd_list<-NULL
@@ -360,7 +360,7 @@ res_variogramscore<-data.frame(Base_vs=Base_vs,BottomUp_vs=BottomUp_vs,JPP_vs=JP
                                EnergyScore_Opt_vsv=EnergyScore_Opt_vsv)
 
 
-write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_Regularization.csv',row.names=FALSE)
-write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_Regularization.csv',row.names=FALSE)
-write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_Regularization.csv',row.names=FALSE)
+write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_ETS_Regularization.csv',row.names=FALSE)
+write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_ETS_Regularization.csv',row.names=FALSE)
+write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_ETS_Regularization.csv',row.names=FALSE)
 

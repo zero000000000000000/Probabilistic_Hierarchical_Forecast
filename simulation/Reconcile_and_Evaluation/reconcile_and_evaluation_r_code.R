@@ -7,11 +7,24 @@ library(tidyverse)
 library(mvtnorm)
 library(Matrix)
 library(RcppCNPy)
-#Clear workspace
-rm(list=ls())
+
+library(reticulate)
+use_python("C:\\ProgramData\\Anaconda3\\python.exe")
+my_class <- import("CRPS.CRPS")
+
+# CRPS with python
+crps<-function(y,x,xs){
+  res<-NULL
+  for(i in 1:dim(y)[1]){
+    my_object <- my_class$CRPS(x[i,],y[i,1])
+    sum_result <- my_object$compute()
+    res<-c(res,sum_result[[1]])
+  }
+  return(res)
+}
 
 # CRPS with alpha = 1
-crps<-function(y,x,xs){
+crps1<-function(y,x,xs){
   dif1<-x-xs
   dif2<-y-x
   term1<-apply(dif1,1,function(v){sum(abs(v))})
@@ -434,11 +447,11 @@ for(z in 1:8){
     
   }
   write.csv(res_energyscore,paste('.\\Evaluation_Result_new\\Energy_Score\\',generate,'_',
-                                  rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
+                                  rootbasef,'_',depj,'_v2.csv',sep=''),row.names=FALSE)
   write.csv(res_crps,paste('.\\Evaluation_Result_new\\CRPS\\',generate,'_',
-                           rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
+                           rootbasef,'_',depj,'_v2.csv',sep=''),row.names=FALSE)
   write.csv(res_variogramscore,paste('.\\Evaluation_Result_new\\Variogram_Score\\',generate,'_',
-                           rootbasef,'_',depj,'.csv',sep=''),row.names=FALSE)
+                           rootbasef,'_',depj,'_v2.csv',sep=''),row.names=FALSE)
 }
 
 

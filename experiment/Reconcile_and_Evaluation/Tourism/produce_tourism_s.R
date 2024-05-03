@@ -152,14 +152,17 @@ M<-111 #Number of series
 S<-fromJSON('./Data/Tourism/Tourism_Smat.json')
 
 # Predefine
-SG_bu<-S%*%cbind(matrix(0,76,35),diag(rep(1,76)))
-SG_ols<-S%*%solve(t(S)%*%S,t(S))
+# SG_bu<-S%*%cbind(matrix(0,76,35),diag(rep(1,76)))
+# SG_ols<-S%*%solve(t(S)%*%S,t(S))
 
 # Read raw data
 data<-read.csv('./Data/Tourism/Tourism_process.csv')
 
+colname<-colnames(data[,-c(1,2)])
+ind<-match(c("BAA","AD","BEB","BEF","CD"),colname)
+
 # Read base forecasts
-fc<-fromJSON('./Base_Forecasts/Tourism.json')
+fc<-fromJSON('./Base_Forecasts/Tourism/Tourism.json')
 for(i in 1:111){
   names(fc[[i]])<-c('fc_mean','fc_var','resid','fitted')
   sd_list<-NULL
@@ -169,7 +172,7 @@ for(i in 1:111){
   fc[[i]]$fc_sd<-sd_list
 }
 
-basis_lis<-forecast.basis_series(S,immu_set=c(1))
+basis_lis<-forecast.basis_series(S,immu_set=ind)
 x<-matrix(rnorm((Q*M),mean=rep(1,M),sd=rep(1,M)),M,Q)
 newx <- forecast.reconcile(t(x), 
                              S, 
@@ -177,4 +180,6 @@ newx <- forecast.reconcile(t(x),
                              basis_lis$mutable_basis,
                              basis_lis$immutable_basis)
 json_object <- toJSON(newx$sMat, pretty = TRUE)
-write_json(json_object, "./Reconcile_and_Evaluation/Tourism_tranformed_Smat.json", pretty = TRUE)
+new_ind <- toJSON(newx$new_index)
+write_json(json_object, "./Reconcile_and_Evaluation/Tourism_tranformed_Smat_5.json", pretty = TRUE)
+write_json(new_ind, "./Reconcile_and_Evaluation/Tourism_tranformed_newindex_5.json", pretty = TRUE)

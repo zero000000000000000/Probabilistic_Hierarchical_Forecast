@@ -15,7 +15,7 @@ if __name__ == '__main__':
     rootbasef = args.rootbasef
     basefdep = args.basefdep
 
-    df = pd.read_csv(f'./Analyze_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}_mean_crps.csv').iloc[:,1:]
+    df = pd.read_csv(f'./Analyze_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}_mean_crps_v2.csv').iloc[:,1:]
     df.columns = ['Base','BottomUp','JPP','OLS','OLSv','WLS','WLSv','MinTShr','MinTShrv','EnergyScore_Opt']
     rank_res = df.rank(axis=1)
     k=10
@@ -35,4 +35,4 @@ if __name__ == '__main__':
     ax.set_yticklabels(list(x.index))
     ax.set_title(f'MCB Test::{generate}_{rootbasef}_{basefdep}')
     plt.tight_layout()
-    plt.savefig(f'./Plot_new/MCB_Test_{generate}_{rootbasef}_{basefdep}.png')
+    plt.savefig(f'./Plot_new/MCB_Test_{generate}_{rootbasef}_{basefdep}_v2.png')

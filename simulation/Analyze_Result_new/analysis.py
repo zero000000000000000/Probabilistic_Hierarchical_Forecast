@@ -74,7 +74,7 @@ def plot_avg_crps(data,path1,path):
     data = data.groupby('series').mean()
 
     # Save the processed data
-    data.to_csv(path1+'_mean_crps.csv',index=True)
+    data.to_csv(path1+'_mean_crps_v2.csv',index=True)
 
     ax = data.plot(kind='line',
                    title='Average CRPS',
@@ -84,7 +84,7 @@ def plot_avg_crps(data,path1,path):
                    figsize=(12, 9))
     ax.set_xlabel('Series Index')
     ax.set_ylabel('CRPS')
-    plt.savefig(path+'_avg.png')
+    plt.savefig(path+'_avg_v2.png')
     #plt.show()
     plt.close()
 
@@ -111,17 +111,17 @@ if __name__=='__main__':
     basefdep = args.basefdep
 
     # Get R results
-    r_es_data = pd.read_csv(f'./Evaluation_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}.csv')
-    r_crps_data = pd.read_csv(f'./Evaluation_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}.csv')
-    r_vs_data = pd.read_csv(f'./Evaluation_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}.csv')
+    # r_es_data = pd.read_csv(f'./Evaluation_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}.csv')
+    r_crps_data = pd.read_csv(f'./Evaluation_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}_v2.csv')
+    # r_vs_data = pd.read_csv(f'./Evaluation_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}.csv')
 
 
-    plot_avg_energy_score(r_es_data,
-                          path1=f'./Analyze_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}',
-                          path=f'./Plot_new/Energy_Score/{generate}_{rootbasef}_{basefdep}')
-    plot_avg_variogram_score(r_vs_data,
-                             path1=f'./Analyze_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}',
-                             path=f'./Plot_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}')
+    # plot_avg_energy_score(r_es_data,
+    #                       path1=f'./Analyze_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}',
+    #                       path=f'./Plot_new/Energy_Score/{generate}_{rootbasef}_{basefdep}')
+    # plot_avg_variogram_score(r_vs_data,
+    #                          path1=f'./Analyze_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}',
+    #                          path=f'./Plot_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}')
     plot_avg_crps(r_crps_data,
                   path1=f'./Analyze_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}',
                   path=f'./Plot_new/CRPS/{generate}_{rootbasef}_{basefdep}')

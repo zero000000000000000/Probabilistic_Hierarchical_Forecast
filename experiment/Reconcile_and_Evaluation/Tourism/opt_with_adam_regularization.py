@@ -140,14 +140,14 @@ if __name__ == '__main__':
         dG[(m1-1),] = [0]*n
 
     ind = loss.index(min(loss))
-    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_min_G_indep.npy',G_list[ind])
-    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Reluarization_loss_indep.npy',loss)
-    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_G_indep.npy',G)
+    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_min_G_indep_optuna.npy',G_list[ind])
+    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Reluarization_loss_indep_optuna.npy',loss)
+    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_ETS_Regularization_G_indep_optuna.npy',G)
 
     x_axis = list(range(1,len(loss)+1))
     plt.plot(x_axis,loss,'-r')
     plt.title('Tourism::ETS 能量得分迭代图')
     plt.xlabel('迭代次数')
     plt.ylabel('能量得分')
-    plt.savefig('./Tourism_ETS_indep.png')
+    plt.savefig('./Plot_new/Tourism/Tourism_ETS_indep.png')
     plt.show()
