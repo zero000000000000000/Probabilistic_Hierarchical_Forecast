@@ -10,8 +10,23 @@ library(Matrix)
 #Clear workspace
 rm(list=ls())
 
-# CRPS with alpha = 1
+library(reticulate)
+use_python("C:\\ProgramData\\Anaconda3\\python.exe")
+my_class <- import("CRPS.CRPS")
+
+# CRPS with python
 crps<-function(y,x,xs){
+  res<-NULL
+  for(i in 1:dim(y)[1]){
+    my_object <- my_class$CRPS(x[i,],y[i,1])
+    sum_result <- my_object$compute()
+    res<-c(res,sum_result[[1]])
+  }
+  return(res)
+}
+
+# CRPS with alpha = 1
+crps1<-function(y,x,xs){
   dif1<-x-xs
   dif2<-y-x
   term1<-apply(dif1,1,function(v){sum(abs(v))})
@@ -360,7 +375,7 @@ res_variogramscore<-data.frame(Base_vs=Base_vs,BottomUp_vs=BottomUp_vs,JPP_vs=JP
                                EnergyScore_Opt_vsv=EnergyScore_Opt_vsv)
 
 
-write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_ETS_Regularization.csv',row.names=FALSE)
-write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_ETS_Regularization.csv',row.names=FALSE)
-write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_ETS_Regularization.csv',row.names=FALSE)
+write.csv(res_energyscore,'.\\Evaluation_Result_new\\Energy_Score\\Tourism_ETS.csv',row.names=FALSE)
+write.csv(res_crps,'.\\Evaluation_Result_new\\CRPS\\Tourism_ETS.csv',row.names=FALSE)
+write.csv(res_variogramscore,'.\\Evaluation_Result_new\\Variogram_Score\\Tourism_ETS.csv',row.names=FALSE)
 

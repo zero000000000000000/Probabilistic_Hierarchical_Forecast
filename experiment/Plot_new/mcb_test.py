@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('./Analyze_Result_new/CRPS/Tourism_Regularization_mean_crps.csv').iloc[:,1:]
+df = pd.read_csv('./Analyze_Result_new/CRPS/Tourism_ETS_mean_crps.csv').iloc[:,1:]
 df.columns = ['Base','BottomUp','JPP','OLS','OLSv','WLS','WLSv','MinTShr','MinTShrv','EnergyScore_Opt']
 
 rank_res = df.rank(axis=1)
@@ -20,5 +20,6 @@ ax.set_facecolor('white')
 ax.errorbar(x, y, xerr = xerr, fmt='o', linewidth=2, capsize=6)
 ax.set_yticks(list(range(0,k,1)))
 ax.set_yticklabels(list(x.index))
-ax.set_title('Tourism::MCB Test')
-plt.savefig('./Plot_new/Tourism/MCB_Test_Regularization.png')
+ax.set_title('Tourism::ETS')
+plt.savefig('./Plot_new/Tourism/MCB_Test_ETS.png')
+plt.show()
