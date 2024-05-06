@@ -11,22 +11,22 @@ fig.subplots_adjust(hspace=0.5)
 
 axs[0].plot(x,new_data['T'],label='T',color='black',linewidth=1)
 axs[0].legend()
-axs[0].set_title('Level_0')
+axs[0].set_title('Level_1')
 axs[0].set_xlabel('Time')
 
 colors = ['red','green','blue','yellow']
 for i in range(2):
     axs[1].plot(x,new_data[l1[i]],label=l1[i],color=colors[i],linewidth=1)
 axs[1].legend()
-axs[1].set_title('Level_1')
+axs[1].set_title('Level_2')
 axs[1].set_xlabel('Time')
 
 for i in range(4):
     axs[2].plot(x,new_data[l2[i]],label=l2[i],color=colors[i],linewidth=1)
 axs[2].legend()
-axs[2].set_title('Level_2')
+axs[2].set_title('Level_3')
 axs[2].set_xlabel('Time')
 
 
-plt.savefig('./Plot/WithoutNoise_Data.png')
+plt.savefig('./Plot_new/WithoutNoise_Data.png')
 plt.show()

@@ -22,7 +22,7 @@ def plot_avg_energy_score(data,path1,path):
     data = data.mean()
 
     # Save the processed data
-    data.to_csv(path1+'_mean_es.csv',index=True)
+    data.to_csv(path1+'_mean_es_v2.csv',index=True)
 
     ax = data.plot(kind='bar',
                  title='Average Energy Score',
@@ -34,7 +34,7 @@ def plot_avg_energy_score(data,path1,path):
     for p in ax.patches:
         ax.text(p.get_x() + p.get_width()/2, p.get_height() + 0.1, format(p.get_height(), '.2f'),
                 ha='center', va='bottom', fontsize=12)
-    plt.savefig(path+'_avg.png')
+    plt.savefig(path+'_avg_v2.png')
     #plt.show()
     plt.close()
 
@@ -48,7 +48,7 @@ def plot_avg_variogram_score(data,path1,path):
     data = data.mean()
 
     # Save the processed data
-    data.to_csv(path1+'_mean_vs.csv',index=True)
+    data.to_csv(path1+'_mean_vs_v2.csv',index=True)
 
     ax = data.plot(kind='bar',
                  title='Average Variogram Score',
@@ -60,7 +60,7 @@ def plot_avg_variogram_score(data,path1,path):
     for p in ax.patches:
         ax.text(p.get_x() + p.get_width()/2, p.get_height() + 0.1, format(p.get_height(), '.2f'),
                 ha='center', va='bottom', fontsize=12)
-    plt.savefig(path+'_avg.png')
+    plt.savefig(path+'_avg_v2.png')
     #plt.show()
     plt.close()
 
@@ -111,17 +111,17 @@ if __name__=='__main__':
     basefdep = args.basefdep
 
     # Get R results
-    # r_es_data = pd.read_csv(f'./Evaluation_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}.csv')
+    r_es_data = pd.read_csv(f'./Evaluation_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}_v2.csv')
     r_crps_data = pd.read_csv(f'./Evaluation_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}_v2.csv')
-    # r_vs_data = pd.read_csv(f'./Evaluation_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}.csv')
+    r_vs_data = pd.read_csv(f'./Evaluation_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}_v2.csv')
 
 
-    # plot_avg_energy_score(r_es_data,
-    #                       path1=f'./Analyze_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}',
-    #                       path=f'./Plot_new/Energy_Score/{generate}_{rootbasef}_{basefdep}')
-    # plot_avg_variogram_score(r_vs_data,
-    #                          path1=f'./Analyze_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}',
-    #                          path=f'./Plot_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}')
+    plot_avg_energy_score(r_es_data,
+                          path1=f'./Analyze_Result_new/Energy_Score/{generate}_{rootbasef}_{basefdep}',
+                          path=f'./Plot_new/Energy_Score/{generate}_{rootbasef}_{basefdep}')
+    plot_avg_variogram_score(r_vs_data,
+                             path1=f'./Analyze_Result_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}',
+                             path=f'./Plot_new/Variogram_Score/{generate}_{rootbasef}_{basefdep}')
     plot_avg_crps(r_crps_data,
                   path1=f'./Analyze_Result_new/CRPS/{generate}_{rootbasef}_{basefdep}',
                   path=f'./Plot_new/CRPS/{generate}_{rootbasef}_{basefdep}')

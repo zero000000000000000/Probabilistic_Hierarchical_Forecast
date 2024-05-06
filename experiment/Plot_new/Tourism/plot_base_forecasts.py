@@ -5,6 +5,7 @@ import json
 
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
+# plt.rcParams.update({'font.size': 16})
 
 # Read raw data
 df = pd.read_csv('./Data/Tourism/Tourism_process.csv')
