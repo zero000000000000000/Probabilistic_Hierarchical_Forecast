@@ -142,9 +142,18 @@ if __name__ == '__main__':
         dG[(m1-1),] = [0]*n
 
     ind = loss.index(min(loss))
-    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_deepar_Regularization_min_G_indep_optuna.npy',G_list[ind])
-    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_deepar_Reluarization_loss_indep_optuna.npy',loss)
-    np.save('./Reconcile_and_Evaluation/Tourism/Tourism_deepar_Regularization_G_indep_optuna.npy',G)
+    ind_list = []
+    loss_b = []
+    for i in range(len(loss)):
+        if loss[i]>0:
+            loss_b.append(loss[i])
+    for i in range(len(loss)):
+        if loss[i]>0 and loss[i]==min(loss_b):
+            break
+    
+    np.save('./Reconcile_and_Evaluation/Wiki/Wiki_ARIMA_Regularization_min_G_indep_optuna.npy',G_list[i])
+    np.save('./Reconcile_and_Evaluation/Wiki/Wiki_ARIMA_Reluarization_loss_indep_optuna.npy',loss)
+    np.save('./Reconcile_and_Evaluation/Wiki/Wiki_ARIMA_Regularization_G_indep_optuna.npy',G)
 
     x_axis = list(range(1,len(loss)+1))
     plt.plot(x_axis,loss,'-r')

@@ -4,7 +4,7 @@ class EarlyStopping:
     '''
     class to define whether to early stop
     '''
-    def __init__(self, patience=100, delta=50000):
+    def __init__(self, patience=100, delta=5000000):
         self.patience = patience
         self.delta = delta
         self.best_loss = np.Inf
