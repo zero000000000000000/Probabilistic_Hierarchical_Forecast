@@ -16,7 +16,7 @@ if __name__=='__main__':
     method = args.method
     dataset = args.dataset
 
-    df = pd.read_csv(f'./Analyze_Result_new/CRPS/{dataset}_{method}_mean_crps.csv').iloc[:,1:]
+    df = pd.read_csv(f'./Analyze_Result_new/CRPS/{dataset}_{method}_mean_crps_5.csv').iloc[:,1:]
 
     if method == 'deepar':
         df.columns = ['Base','BottomUp','JPP','OLS','OLSv','WLS','WLSv','EnergyScore_Opt']
@@ -29,8 +29,9 @@ if __name__=='__main__':
     
     if dataset == 'Tourism':
         N = 111
-    else:
-        N = 199
+
+    elif dataset == 'labour':
+        N = 57
 
     rank_res = df.rank(axis=1)
     r = 4.743
@@ -47,5 +48,5 @@ if __name__=='__main__':
     ax.set_yticklabels(list(x.index))
     ax.set_title(f'{dataset}::{method}')
     plt.tight_layout()
-    plt.savefig(f'./Plot_new/{dataset}/MCB_Test_{method}.png')
+    plt.savefig(f'./Plot_new/{dataset}/MCB_Test_{method}_5.png')
     plt.show()

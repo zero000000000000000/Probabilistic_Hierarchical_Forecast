@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-new_data = pd.read_csv('./Data/Simulated_Data_WithoutNoise.csv')
+new_data = pd.read_csv('./Data/Simulated_Data_WithNoise.csv')
 l1 = ['A','B']
 l2 = ['AA','AB','BA','BB']
 x = [i for i in range(1,(len(new_data)+1))]
@@ -28,5 +28,5 @@ axs[2].set_title('Level_3')
 axs[2].set_xlabel('Time')
 
 
-plt.savefig('./Plot_new/WithoutNoise_Data.png')
+plt.savefig('./Plot_new/WithNoise_Data.png')
 plt.show()

@@ -93,7 +93,8 @@ if __name__=='__main__':
     args = parser.parse_args()
     method = args.method
     dataset = args.dataset
-
+    if dataset == 'labour':
+        d1 = 'Labour'
     # Get R results
     r_es_data = pd.read_csv(f'./Evaluation_Result_new/Energy_Score/{dataset}_{method}.csv')
     r_crps_data = pd.read_csv(f'./Evaluation_Result_new/CRPS/{dataset}_{method}.csv')
@@ -101,11 +102,11 @@ if __name__=='__main__':
 
     plot_avg_energy_score(r_es_data,
                           path1=f'./Analyze_Result_new/Energy_Score/{dataset}_{method}',
-                          path=f'./Plot_new/{dataset}/Energy_Score/{method}')
+                          path=f'./Plot_new/{d1}/Energy_Score/{method}')
 
     plot_avg_variogram_score(r_vs_data,
                              path1=f'./Analyze_Result_new/Variogram_Score/{dataset}_{method}',
                              path=f'./Plot_new/{dataset}/Variogram_Score/{method}')
     plot_avg_crps(r_crps_data,
                   path1=f'./Analyze_Result_new/CRPS/{dataset}_{method}',
-                  path=f'./Plot_new/{dataset}/CRPS/{method}')
+                  path=f'./Plot_new/{d1}/CRPS/{method}')
