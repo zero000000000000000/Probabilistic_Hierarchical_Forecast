@@ -3,9 +3,13 @@ import pandas as pd
 import numpy as np
 import json
 
-plt.rcParams['font.sans-serif'] = ['SimHei']
-plt.rcParams['axes.unicode_minus'] = False
-# plt.rcParams.update({'font.size': 16})
+config = {
+    "font.family": 'serif',
+    "font.size": 18,
+    "mathtext.fontset": 'stix',
+    "font.serif": ['SimHei'],
+}
+plt.rcParams.update(config)
 
 # Read raw data
 df = pd.read_csv('./Data/Tourism/Tourism_process.csv')
@@ -31,17 +35,17 @@ fig,axs = plt.subplots(2,1,figsize = (12,9))
 axs[0].plot([i for i in range(169,229)],df_T[-60:], 'k-')
 axs[0].plot([i for i in range(217,229)], ets_params[:,0,0],'r-')
 axs[0].fill_between(x = [i for i in range(217,229)], y1 = ets_params[:,0,0]-2*np.sqrt(ets_params[:,1,0]), y2 = ets_params[:,0,0]+2*np.sqrt(ets_params[:,1,0]), alpha=0.5)
-axs[0].legend(["真实值", "预测均值", "2Sigma预测区间"], loc="upper left")
-axs[0].set_title('Tourism::ETS')
-axs[0].set_xlabel('Time')
+axs[0].legend(["真实值", "预测均值", "$\mathrm{2Sigma}$预测区间"], loc="upper left")
+axs[0].set_title('$\mathrm{Tourism::ETS}$')
+axs[0].set_xlabel('时间')
 
 # deepar
 axs[1].plot([i for i in range(169,229)], df_T[-60:], 'k-')
 axs[1].plot([i for i in range(217,229)], deepar_params[:,0,0],'r-')
 axs[1].fill_between(x = [i for i in range(217,229)], y1 = deepar_params[:,0,0]-2*np.sqrt(deepar_params[:,1,0]), y2 = deepar_params[:,0,0]+2*np.sqrt(deepar_params[:,1,0]), alpha=0.5)
-axs[1].legend(["真实值", "预测均值", "2Sigma预测区间"], loc="upper left")
-axs[1].set_title('Tourism::DeepAR')
-axs[1].set_xlabel('Time')
+axs[1].legend(["真实值", "预测均值", "$\mathrm{2Sigma}$预测区间"], loc="upper left")
+axs[1].set_title('$\mathrm{Tourism::DeepAR}$')
+axs[1].set_xlabel('时间')
 
 plt.tight_layout()
 

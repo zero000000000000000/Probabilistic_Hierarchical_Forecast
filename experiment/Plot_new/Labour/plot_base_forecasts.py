@@ -2,10 +2,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import json
+config = {
+    "font.family": 'serif',
+    "font.size": 20,
+    "mathtext.fontset": 'stix',
+    "font.serif": ['SimHei'],
+}
+plt.rcParams.update(config)
 
-plt.rcParams['font.sans-serif'] = ['SimHei']
-plt.rcParams['axes.unicode_minus'] = False
-plt.rcParams.update({'font.size': 15})
 
 # Read raw data
 df = pd.read_csv('./Data/Labour/labour_process_place.csv')
@@ -31,9 +35,9 @@ plt.figure(figsize = (12,9))
 plt.plot([i for i in range(134,164)],df_T[-30:], 'k-')
 plt.plot([i for i in range(158,164)], ets_params[:,0,0],'r-')
 plt.fill_between(x = [i for i in range(158,164)], y1 = ets_params[:,0,0]-2*np.sqrt(ets_params[:,1,0]), y2 = ets_params[:,0,0]+2*np.sqrt(ets_params[:,1,0]), alpha=0.5)
-plt.legend(["真实值", "预测均值", "2Sigma预测区间"], loc="upper left")
-plt.title('Labour::ARIMA')
-plt.xlabel('Time')
+plt.legend(["真实值", "预测均值", "$\mathrm{2Sigma}$预测区间"], loc="upper left")
+plt.title('$\mathrm{Labour::ARIMA}$')
+plt.xlabel('时间')
 
 # # deepar
 # axs[1].plot([i for i in range(169,229)], df_T[-60:], 'k-')
