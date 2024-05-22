@@ -30,7 +30,7 @@ if __name__ == '__main__':
     
     df1[name[0]] = df.iloc[0,1:]
     for i in range(1,num):
-        df1[name[i]] = df.iloc[lis[i-1]:lis[i]].mean(axis=0)
+        df1[name[i]] = df.iloc[lis[i-1]:lis[i],1:].mean(axis=0)
     # i += 1
     # df1[name[i]] = df.iloc[lis[i]:].mean(axis=0)
     df1 = df1.round(4)
